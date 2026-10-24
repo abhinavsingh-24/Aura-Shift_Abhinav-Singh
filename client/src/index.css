@@ -31,23 +31,23 @@ a { color: inherit; }
 #root { min-height: 100vh; }
 ::selection { color: #fffdf5; background: #24563b; }
 
-/* SIDEQUEST cinematic manga palette */
+/* SIDEQUEST fantasy adventure journal palette */
 :root {
-  color: #f4eee4;
-  background: #0b0b0e;
-  color-scheme: dark;
-  --cream: #f4eee4;
-  --paper: #e9e0d5;
-  --surface: #151519;
-  --green: #e20b25;
-  --deep-green: #a90019;
-  --mystery-red: #ed102d;
-  --orange: #ff523e;
-  --ink: #f4eee4;
-  --muted: #aaa2a0;
-  --line: #393238;
-  --shadow: 0 14px 34px rgba(0,0,0,.28);
-  --shadow-lg: 0 26px 70px rgba(0,0,0,.42);
+  color: #263d2b;
+  background: #f7f2e7;
+  color-scheme: light;
+  --cream: #f7f2e7;
+  --paper: #ede6d5;
+  --surface: #fffdf7;
+  --green: #315b48;
+  --deep-green: #1e3f30;
+  --mystery-red: #8a9f7b;
+  --orange: #d9b56d;
+  --ink: #263d2b;
+  --muted: #68725f;
+  --line: #d3c9b1;
+  --shadow: 0 12px 28px rgba(42, 55, 38, .07);
+  --shadow-lg: 0 22px 55px rgba(42, 55, 38, .12);
 }
-body { background: #0b0b0e; color: var(--ink); }
-::selection { background: #ed102d; color: #fff; }
+body { background: radial-gradient(ellipse at 82% 0%, rgba(201,193,232,.24), transparent 32rem), linear-gradient(180deg, #fbf8ef 0%, #f1ead9 100%); color: var(--ink); }
+::selection { background: #315b48; color: #fffdf7; }
