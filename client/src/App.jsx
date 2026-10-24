@@ -467,33 +467,18 @@ function MainApp() {
         {page === 'quest-detail' && detailRouteError ? <div className="message error-message">{detailRouteError} <a href="/quests">Return to the Quest Board</a></div> : null}
         {page === 'home' && <section className="hero-section">
           <div className="hero-copy">
-            <span className="eyebrow"><span className="eyebrow-dot" /> A little adventure is waiting</span>
-            <h1>Life is the<br /><em>main quest.</em></h1>
+            <span className="eyebrow"><span className="eyebrow-dot" /> The city is full of stories</span>
+            <h1>Life Is The<br /><em>Main Quest.</em></h1>
             <p>
-              Find little adventures, meet kindred spirits, and turn an ordinary day into a story worth keeping.
+              Your city is full of hidden stories. Find the workshops, open mics, hackathons, games, and people that turn an ordinary day into an adventure.
             </p>
             <div className="hero-actions">
               <a href="/quests" className="primary-btn">Explore quests</a>
               <a href="/publish" className="secondary-btn">Publish a quest</a>
             </div>
-            <div className="hero-note"><span className="note-pin">↗</span><span>Take the scenic route. A new path can start just around the corner.</span></div>
+            <div className="hero-note"><span className="note-pin">↗</span><span>There is more to your city than your usual route.</span></div>
           </div>
-          <div
-            className="hero-art"
-            aria-label="Illustrated fantasy map of your city"
-            onMouseMove={(event) => {
-              if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-              const bounds = event.currentTarget.getBoundingClientRect();
-              const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-              const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-              event.currentTarget.style.setProperty('--pointer-x', `${x * 5}deg`);
-              event.currentTarget.style.setProperty('--pointer-y', `${y * -5}deg`);
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.setProperty('--pointer-x', '0deg');
-              event.currentTarget.style.setProperty('--pointer-y', '0deg');
-            }}
-          >
+          <div className="hero-art" aria-label="Illustrated mystery map of a city">
             <div className="map-orbit orbit-one" />
             <div className="map-orbit orbit-two" />
             <div className="map-route route-one" />
@@ -522,8 +507,8 @@ function MainApp() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">Chapter 02 / The Quest Board</span>
-              <h2>A little adventure is waiting.</h2>
-              <p className="small-copy">Browse the local happenings pinned along your path.</p>
+              <h2>Pin Your Next Unexpected Thing.</h2>
+              <p className="small-copy">Choose a trail, scan the board, and follow something new.</p>
             </div>
             <button type="button" className="ghost-btn" onClick={clearFilters}>Clear filters</button>
           </div>
