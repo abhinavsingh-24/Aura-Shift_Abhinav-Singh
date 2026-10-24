@@ -6,9 +6,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { sampleEvents } = require('./sampleData');
 const { rankEvents } = require('./recommendations');
-const { validateReportDraft } = require('./reportRules');
-const { createRateLimiter } = require('./rateLimit');
-const { connectMongo, EventModel, RegistrationModel, UserModel, ReportModel } = require('./db');
+const { connectMongo, EventModel, RegistrationModel, UserModel } = require('./db');
 
 dotenv.config();
 
@@ -36,25 +34,10 @@ app.use(
     credentials: true,
   }),
 );
-// Baseline security headers. A stricter CSP is intentionally left to deployment
-// configuration because the client may use inline styles and external map assets.
-app.disable('x-powered-by');
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
-  next();
-});
-app.use(express.json({ limit: '256kb', strict: true }));
-
-const authRateLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 30 });
-const writeRateLimit = createRateLimiter({ windowMs: 60 * 1000, max: 30 });
+app.use(express.json({ limit: '1mb' }));
 
 const registrations = [];
 const users = [];
-const reports = [];
 if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32 || process.env.SESSION_SECRET.includes('replace-with-a-long-random-secret'))) {
   throw new Error('SESSION_SECRET must contain at least 32 characters in production.');
 }
@@ -279,7 +262,7 @@ async function verifyPassword(password, stored) {
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
-app.post('/api/auth/register', authRateLimit, async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { name, email, password, role = 'explorer' } = req.body || {};
   const cleanName = typeof name === 'string' ? name.trim() : '';
   const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
@@ -314,7 +297,7 @@ app.post('/api/auth/register', authRateLimit, async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', authRateLimit, async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   if (!email || !password) return res.status(400).json({ message: 'Enter your email and password.' });
@@ -501,74 +484,7 @@ app.get('/api/recommendations', (req, res) => {
   return res.json({ count: recommendations.length, recommendations });
 });
 
-// Feature 17: authenticated explorers can see their own booking/RSVP records only.
-app.get('/api/my-registrations', async (req, res) => {
-  let user;
-  try { user = await authenticatedUser(req); }
-  catch (error) { return res.status(500).json({ message: 'Unable to verify your account right now.' }); }
-  if (!user) return res.status(401).json({ message: 'Please sign in to view your bookings.', code: 'AUTH_REQUIRED' });
-  const participantId = String(user.id || user._id || '');
-  const records = mongoReady
-    ? await RegistrationModel.find({ participantId }).sort({ createdAt: -1 }).lean()
-    : registrations.filter((entry) => entry.participantId === participantId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const bookings = records.map((record) => {
-    const event = events.find((item) => String(item.id || item._id) === String(record.eventId));
-    return {
-      id: record.id || String(record._id), eventId: record.eventId, createdAt: record.createdAt,
-      status: 'confirmed', bookingType: event?.registrationUrl ? 'external-registration-available' : 'free-rsvp',
-      event: event ? normalizeEvent(event) : null,
-    };
-  });
-  return res.json({ count: bookings.length, bookings });
-});
-
 // Participant-level registration records are intentionally not exposed publicly.
-
-// Feature 18: authenticated reporting for events and organizers. Reports are private to the reporter.
-app.post('/api/reports', writeRateLimit, async (req, res) => {
-  let user;
-  try { user = await authenticatedUser(req); } catch { user = null; }
-  if (!user) return res.status(401).json({ message: 'Please sign in before submitting a report.' });
-  const validation = validateReportDraft(req.body || {});
-  if (!validation.isValid) return res.status(400).json({ message: 'Please check your report details.', errors: validation.errors });
-  const { targetType, targetId, reason, details } = validation.value;
-  const targetEvent = events.find((event) => String(event.id) === targetId || String(event._id) === targetId);
-  if (targetType === 'event' && !targetEvent) return res.status(404).json({ message: 'The event could not be found.' });
-  const targetLabel = targetType === 'event' ? targetEvent.title : String(body.targetLabel || '').trim().slice(0, 160);
-  if (!targetLabel) return res.status(400).json({ message: 'A target name is required for organizer reports.' });
-  const existing = mongoReady
-    ? await ReportModel.findOne({ reporterId: String(user.id || user._id), targetType, targetId, status: { $in: ['received', 'reviewing'] } }).lean()
-    : reports.find((report) => report.reporterId === String(user.id || user._id) && report.targetType === targetType && report.targetId === targetId && ['received', 'reviewing'].includes(report.status));
-  if (existing) return res.status(409).json({ message: 'You already have an open report for this target.' });
-  const report = {
-    id: createUniqueId('report'), reporterId: String(user.id || user._id), reporterName: user.name,
-    targetType, targetId, targetLabel, reason, details, status: 'received', createdAt: new Date().toISOString(),
-  };
-  try {
-    if (mongoReady) await ReportModel.create(report);
-    else reports.unshift(report);
-  } catch (error) {
-    if (error && error.code === 11000) return res.status(409).json({ message: 'This report has already been submitted.' });
-    console.error('Unable to save report:', error.message);
-    return res.status(500).json({ message: 'Your report could not be saved. Please try again.' });
-  }
-  return res.status(201).json({ message: 'Report received. Thank you for helping keep SIDEQUEST safe.', report: { id: report.id, targetType, targetLabel, reason, status: report.status, createdAt: report.createdAt } });
-});
-
-app.get('/api/my-reports', async (req, res) => {
-  let user;
-  try { user = await authenticatedUser(req); } catch { user = null; }
-  if (!user) return res.status(401).json({ message: 'Please sign in to view your reports.' });
-  try {
-    const mine = mongoReady
-      ? await ReportModel.find({ reporterId: String(user.id || user._id) }).sort({ createdAt: -1 }).select('id targetType targetLabel reason status createdAt').lean()
-      : reports.filter((report) => report.reporterId === String(user.id || user._id)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(({ id, targetType, targetLabel, reason, status, createdAt }) => ({ id, targetType, targetLabel, reason, status, createdAt }));
-    return res.json({ reports: mine });
-  } catch (error) {
-    console.error('Unable to load reports:', error.message);
-    return res.status(500).json({ message: 'Your reports could not be loaded right now.' });
-  }
-});
 
 app.get('/api/insights', async (req, res) => {
   const allRegistrations = mongoReady
@@ -611,7 +527,7 @@ app.get('/api/insights', async (req, res) => {
   });
 });
 
-app.post('/api/events/:id/register', writeRateLimit, async (req, res) => {
+app.post('/api/events/:id/register', async (req, res) => {
   let user;
   try {
     user = await authenticatedUser(req);
@@ -689,8 +605,6 @@ app.post('/api/events/:id/register', writeRateLimit, async (req, res) => {
 
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
-  if (error && error.type === 'entity.too.large') return res.status(413).json({ message: 'Request body is too large.' });
-  if (error && error.type === 'entity.parse.failed') return res.status(400).json({ message: 'Request body must contain valid JSON.' });
   console.error('Request failed:', error.message);
   return res.status(500).json({ message: 'An unexpected server error occurred.' });
 });

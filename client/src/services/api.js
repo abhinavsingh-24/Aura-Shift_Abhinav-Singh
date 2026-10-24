@@ -1,47 +1,22 @@
 const API_BASE = '/api';
 
-const BACKEND_HINT = 'Start it from the project root with "npm run dev" (the API listens on port 3001) and try again.';
-
-export class ApiError extends Error {
-  constructor(message, { status = 0, code = '', details = [] } = {}) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.code = code;
-    this.details = details;
-  }
-}
-
 async function request(path, options = {}) {
-  let response;
-  try {
-    response = await fetch(`${API_BASE}${path}`, {
-      credentials: 'same-origin',
-      ...options,
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    });
-  } catch {
-    // fetch only rejects when the request never completed (offline, server down, blocked).
-    throw new ApiError(`Cannot reach the SIDEQUEST server. ${BACKEND_HINT}`, { code: 'NETWORK' });
-  }
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
 
-  const raw = await response.text().catch(() => '');
-  let data = {};
-  try { data = raw ? JSON.parse(raw) : {}; } catch { data = {}; }
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const details = Array.isArray(data.errors) ? data.errors : [];
-    if (data.message) {
-      throw new ApiError(`${data.message}${details.length ? ` ${details.join(' ')}` : ''}`, { status: response.status, code: data.code || '', details });
-    }
-    // No JSON message at all: this is almost always the dev proxy answering for a backend that is not running.
-    const proxyFailure = [500, 502, 503, 504].includes(response.status) && !raw.trim().startsWith('{');
-    throw new ApiError(
-      proxyFailure
-        ? `The SIDEQUEST server is not responding (HTTP ${response.status}). ${BACKEND_HINT}`
-        : `The request failed (HTTP ${response.status}). Please try again.`,
-      { status: response.status, code: proxyFailure ? 'BACKEND_DOWN' : '' },
-    );
+    const validationDetails = Array.isArray(data.errors) && data.errors.length
+      ? ` ${data.errors.join(' ')}`
+      : '';
+    const message = `${data.message || 'Something went wrong.'}${validationDetails}`;
+    throw new Error(message);
   }
 
   return data;
@@ -115,16 +90,4 @@ export function logoutAccount() {
 
 export function getHealth() {
   return request('/health');
-}
-
-export function getMyRegistrations() {
-  return request('/my-registrations');
-}
-
-export function submitReport(payload) {
-  return request('/reports', { method: 'POST', body: JSON.stringify(payload) });
-}
-
-export function getMyReports() {
-  return request('/my-reports');
 }
