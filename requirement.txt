@@ -1,0 +1,6 @@
+# SIDEQUEST is a JavaScript/Node.js project; this is not a Python project.
+# Install backend dependencies from the project root with: npm install
+# Install frontend dependencies with: npm install --prefix client
+# Runtime: Node.js 20.19+ (required by the Vite version in client/package.json)
+# Backend dependencies are declared in package.json.
+# Frontend dependencies are declared in client/package.json.

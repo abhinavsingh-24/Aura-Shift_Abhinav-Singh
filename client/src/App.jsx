@@ -44,21 +44,6 @@ function formatEventDateTime(event) {
   }).format(date);
 }
 
-function getParticipantId() {
-  const key = 'sidequest-participant-id';
-  try {
-    const existing = window.localStorage.getItem(key);
-    if (existing) return existing;
-    const created = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `participant-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    window.localStorage.setItem(key, created);
-    return created;
-  } catch {
-    return `participant-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-}
-
 function categorySymbol(category) {
   const symbols = {
     Music: '♫',
@@ -75,6 +60,9 @@ function categorySymbol(category) {
 
 function AuthPage({ mode }) {
   const isRegister = mode === 'register';
+  const authQuery = new URLSearchParams(window.location.search);
+  const nextPath = authQuery.get('next');
+  const switchHref = `${isRegister ? '/login' : '/register'}${nextPath && nextPath.startsWith('/') && !nextPath.startsWith('//') ? `?next=${encodeURIComponent(nextPath)}` : ''}`;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -122,7 +110,7 @@ function AuthPage({ mode }) {
             {error && <div className="message error-message" role="alert">{error}</div>}
             <button className="primary-btn auth-submit" type="submit" disabled={busy}>{busy ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}</button>
           </form>
-          <p className="auth-switch">{isRegister ? 'Already have an account?' : 'New to SIDEQUEST?'} <a href={isRegister ? '/login' : '/register'}>{isRegister ? 'Sign in' : 'Create an account'}</a></p>
+          <p className="auth-switch">{isRegister ? 'Already have an account?' : 'New to SIDEQUEST?'} <a href={switchHref}>{isRegister ? 'Sign in' : 'Create an account'}</a></p>
           <p className="helper-text">Prototype note: use a unique password. Never reuse your important personal password in a demo environment.</p>
         </main>
       </div>
@@ -170,7 +158,6 @@ function MainApp() {
   const [formSuccess, setFormSuccess] = useState('');
   const [detailEvent, setDetailEvent] = useState(null);
   const [detailRouteError, setDetailRouteError] = useState('');
-  const [registrationName, setRegistrationName] = useState('');
   const [registering, setRegistering] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -422,21 +409,20 @@ function MainApp() {
   };
 
   const handleRegister = async (eventId) => {
-    const name = registrationName.trim();
-    if (!name) {
-      setToast('Enter your name before registering.');
+    if (authLoading) {
+      setToast('Checking your account. Please try again in a moment.');
       return;
     }
-    if (name.length > 80) {
-      setToast('Your name must be 80 characters or fewer.');
+    if (!currentUser) {
+      const next = `/quests/${encodeURIComponent(eventId)}`;
+      window.location.assign(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 
     try {
       setRegistering(true);
-      const response = await registerForEvent(eventId, name, getParticipantId());
+      const response = await registerForEvent(eventId);
       setToast(response.message || 'Registration confirmed.');
-      setRegistrationName('');
       if (detailEvent && detailEvent.id === eventId) {
         setDetailEvent({ ...detailEvent, registrationMessage: response.message });
       }
@@ -481,18 +467,33 @@ function MainApp() {
         {page === 'quest-detail' && detailRouteError ? <div className="message error-message">{detailRouteError} <a href="/quests">Return to the Quest Board</a></div> : null}
         {page === 'home' && <section className="hero-section">
           <div className="hero-copy">
-            <span className="eyebrow"><span className="eyebrow-dot" /> The city is full of stories</span>
-            <h1>Your City.<br />Your Next <em>Quest.</em></h1>
+            <span className="eyebrow"><span className="eyebrow-dot" /> A little adventure is waiting</span>
+            <h1>Life is the<br /><em>main quest.</em></h1>
             <p>
-              Find the workshops, open mics, hackathons, sports, and hidden local experiences that make an ordinary day extraordinary.
+              Find little adventures, meet kindred spirits, and turn an ordinary day into a story worth keeping.
             </p>
             <div className="hero-actions">
               <a href="/quests" className="primary-btn">Explore quests</a>
               <a href="/publish" className="secondary-btn">Publish a quest</a>
             </div>
-            <div className="hero-note"><span className="note-pin">↗</span><span>There is more to your city than your usual route.</span></div>
+            <div className="hero-note"><span className="note-pin">↗</span><span>Take the scenic route. A new path can start just around the corner.</span></div>
           </div>
-          <div className="hero-art" aria-label="Illustrated mystery map of a city">
+          <div
+            className="hero-art"
+            aria-label="Illustrated fantasy map of your city"
+            onMouseMove={(event) => {
+              if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+              const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+              event.currentTarget.style.setProperty('--pointer-x', `${x * 5}deg`);
+              event.currentTarget.style.setProperty('--pointer-y', `${y * -5}deg`);
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.setProperty('--pointer-x', '0deg');
+              event.currentTarget.style.setProperty('--pointer-y', '0deg');
+            }}
+          >
             <div className="map-orbit orbit-one" />
             <div className="map-orbit orbit-two" />
             <div className="map-route route-one" />
@@ -520,12 +521,19 @@ function MainApp() {
         {(page === 'home' || page === 'quests') && <section id="quest-board" className="panel">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">Quest Board</span>
-              <h2>Upcoming events</h2>
+              <span className="eyebrow">Chapter 02 / The Quest Board</span>
+              <h2>A little adventure is waiting.</h2>
+              <p className="small-copy">Browse the local happenings pinned along your path.</p>
             </div>
             <button type="button" className="ghost-btn" onClick={clearFilters}>Clear filters</button>
           </div>
 
+          <div className="quest-trail-picker" aria-label="Quick quest category filters">
+            <button type="button" className={filters.category === 'all' ? 'trail-chip active' : 'trail-chip'} onClick={() => setFilters((current) => ({ ...current, category: 'all' }))}>✦ All quests</button>
+            {['Music', 'Technology', 'Sports', 'Art and culture', 'Gaming'].map((category) => (
+              <button key={category} type="button" className={filters.category === category ? 'trail-chip active' : 'trail-chip'} onClick={() => setFilters((current) => ({ ...current, category }))}>{categorySymbol(category)} {category}</button>
+            ))}
+          </div>
           <div className="filter-grid">
             <label>
               <span>Search</span>
@@ -886,13 +894,10 @@ function MainApp() {
               >
                 {savedQuestIds.includes(detailEvent.id) ? 'Saved' : 'Save quest'}
               </button>
-              <label className="registration-name-field">
-                <span>Your name to register</span>
-                <input value={registrationName} maxLength="80" onChange={(e) => setRegistrationName(e.target.value)} placeholder="Enter your name" autoComplete="name" />
-              </label>
-              <button type="button" className="primary-btn" disabled={registering} onClick={() => handleRegister(detailEvent.id)}>
-                {registering ? 'Registering…' : 'Join this quest'}
+              <button type="button" className="primary-btn" disabled={registering || authLoading} onClick={() => handleRegister(detailEvent.id)}>
+                {registering ? 'Registering…' : authLoading ? 'Checking account…' : currentUser ? 'Join this quest' : 'Sign in to join quest'}
               </button>
+              {!currentUser && !authLoading ? <p className="helper-text registration-auth-hint">Sign in or create an account before joining. Your registration will be linked to your account.</p> : null}
               <button type="button" className="secondary-btn" onClick={() => { setDetailEvent(null); if (page === 'quest-detail') window.location.assign('/quests'); }}>
                 Close
               </button>

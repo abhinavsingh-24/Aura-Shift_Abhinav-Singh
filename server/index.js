@@ -528,14 +528,22 @@ app.get('/api/insights', async (req, res) => {
 });
 
 app.post('/api/events/:id/register', async (req, res) => {
-  const { participantName = '', participantId = '' } = req.body || {};
-  const normalizedName = typeof participantName === 'string' ? participantName.trim() : '';
-  const normalizedParticipantId = typeof participantId === 'string' ? participantId.trim() : '';
-  if (!normalizedName || normalizedName.length > 80) {
-    return res.status(400).json({ message: 'Enter a participant name between 1 and 80 characters.' });
+  let user;
+  try {
+    user = await authenticatedUser(req);
+  } catch (error) {
+    console.error('Unable to verify registration session:', error.message);
+    return res.status(500).json({ message: 'Unable to verify your account right now.' });
   }
-  if (!normalizedParticipantId || normalizedParticipantId.length > 100) {
-    return res.status(400).json({ message: 'A valid participant identifier is required. Refresh the page and try again.' });
+  if (!user) {
+    return res.status(401).json({ message: 'Please sign in before joining a quest.', code: 'AUTH_REQUIRED' });
+  }
+
+  // Identity comes exclusively from the verified session, never from client-supplied names or IDs.
+  const normalizedName = String(user.name || '').trim();
+  const normalizedParticipantId = String(user.id || user._id || '');
+  if (!normalizedName || !normalizedParticipantId) {
+    return res.status(401).json({ message: 'Your account could not be verified. Please sign in again.' });
   }
 
   const target = events.find((event) => event.id === req.params.id || event._id === req.params.id);

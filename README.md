@@ -223,3 +223,13 @@ Run backend tests with `npm test`. The tests cover recommendation scoring and ke
 - Sample events are clearly labelled as development data.
 - Event publication requires valid field input and backend confirmation before success is displayed.
 - The project is structured to remain easy to extend for a hackathon demo or prototype build.
+
+
+### Event registration authentication
+
+- Visitors can browse quests without an account. Joining a quest requires signing in or creating an account.
+- The login flow returns visitors to the event they intended to join.
+- The registration API verifies the signed-in session and derives participant identity from the account; client-supplied participant names and IDs are ignored.
+- The backend rejects unauthenticated registration requests, prevents duplicate registrations per account, and enforces event capacity.
+
+This is a Node.js/React project, not a Python project. `requirements.txt` is provided as a pointer to the npm manifests; install dependencies using `npm install` at the root and `npm install --prefix client`.

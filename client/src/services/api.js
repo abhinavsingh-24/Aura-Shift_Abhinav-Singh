@@ -61,10 +61,10 @@ export function getRecommendations(params = {}) {
   return request(`/recommendations${queryString ? `?${queryString}` : ''}`);
 }
 
-export function registerForEvent(eventId, participantName, participantId) {
+export function registerForEvent(eventId) {
   return request(`/events/${encodeURIComponent(eventId)}/register`, {
     method: 'POST',
-    body: JSON.stringify({ participantName, participantId }),
+    body: JSON.stringify({}),
   });
 }
 

@@ -82,26 +82,41 @@ test('API validates events, creates quests, and handles registration safely', as
   const filteredData = await filteredResponse.json();
   assert.ok(filteredData.events.some((item) => item.id === created.id), 'search should match interests and combine filters case-insensitively');
 
-  const registrationPayload = { participantName: 'Test Participant', participantId: 'api-test-participant' };
-  const registrationResponse = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registrationPayload),
+  const unauthenticatedRegistration = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ participantName: 'Forged Name', participantId: 'forged-id' }),
   });
-  assert.equal(registrationResponse.status, 201);
+  assert.equal(unauthenticatedRegistration.status, 401, 'registration must require a signed-in account');
+
+  const explorerRegistration = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: explorerCookie },
+    body: JSON.stringify({ participantName: 'Forged Name', participantId: 'forged-id', userId: 'someone-else' }),
+  });
+  assert.equal(explorerRegistration.status, 201);
+  const firstRegistration = (await explorerRegistration.json()).registration;
+  assert.equal(firstRegistration.participantName, 'Test Explorer', 'participant name must come from the authenticated account');
+  assert.notEqual(firstRegistration.participantId, 'forged-id', 'participant ID must not be client-controlled');
 
   const duplicateResponse = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registrationPayload),
+    method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: explorerCookie },
+    body: JSON.stringify({ participantName: 'Different Name', participantId: 'different-id' }),
   });
-  assert.equal(duplicateResponse.status, 409);
+  assert.equal(duplicateResponse.status, 409, 'same account cannot register twice even with a forged client ID');
 
-  const sameNameDifferentPerson = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
+  const secondExplorerEmail = `explorer-second-${Date.now()}@example.com`;
+  const secondExplorerResponse = await fetch(`${base}/api/auth/register`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ participantName: 'Test Participant', participantId: 'api-test-participant-2' }),
+    body: JSON.stringify({ name: 'Second Explorer', email: secondExplorerEmail, password: 'safe-demo-password-123', role: 'explorer' }),
   });
-  assert.equal(sameNameDifferentPerson.status, 201);
+  assert.equal(secondExplorerResponse.status, 201);
+  const secondExplorerCookie = secondExplorerResponse.headers.get('set-cookie').split(';')[0];
+  const secondRegistration = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: secondExplorerCookie }, body: JSON.stringify({}),
+  });
+  assert.equal(secondRegistration.status, 201);
 
   const capacityResponse = await fetch(`${base}/api/events/${encodeURIComponent(created.id)}/register`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ participantName: 'Third Participant', participantId: 'api-test-participant-3' }),
+    method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sessionCookie }, body: JSON.stringify({}),
   });
   assert.equal(capacityResponse.status, 409);
 
