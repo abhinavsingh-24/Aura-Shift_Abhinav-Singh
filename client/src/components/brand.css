@@ -1,0 +1,30 @@
+:root {
+  --sq-parchment: #F5EEDC; --sq-paper: #FFFCF4; --sq-aged: #E7DFC9;
+  --sq-forest: #254E3B; --sq-deep: #183B2D; --sq-sage: #A8B89A; --sq-mist: #B8D0D2; --sq-lavender: #D8CDE8;
+  --sq-gold: #C6A15B; --sq-ink: #292E28; --sq-muted: #6F7065; --sq-border: #D9D0BD;
+  --sq-display: 'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --sq-hand: 'Caveat', 'Segoe Script', 'Bradley Hand', 'Brush Script MT', cursive;
+  --sq-body: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sq-radius: 14px; --sq-ease: cubic-bezier(.2, .7, .2, 1);
+}
+.sq-brand { display: inline-flex; align-items: center; gap: .65rem; color: var(--sq-deep); text-decoration: none; line-height: 1; }
+.sq-brand:focus-visible { outline: 3px solid var(--sq-gold); outline-offset: 4px; border-radius: 10px; }
+.sq-brand-text { display: grid; gap: .28rem; }
+.sq-wordmark { font-family: var(--sq-display); font-weight: 700; font-size: 1.45rem; letter-spacing: .13em; }
+.sq-tagline { font-family: var(--sq-body); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--sq-muted); }
+.sq-brand-full { flex-direction: column; text-align: center; gap: .9rem; }
+.sq-brand-full .sq-wordmark { font-size: 2rem; }
+.sq-brand.is-mono, .sq-brand.is-mono .sq-tagline { color: currentColor; }
+@media (max-width: 520px) { .sq-brand-compact .sq-tagline { display: none; } .sq-wordmark { font-size: 1.2rem; } }
+
+/* ---- compact editorial hero + board heading (overrides legacy App.css by specificity) ---- */
+.hero-section.sq-hero { min-height: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); align-items: center; gap: 1.4rem 2rem; padding: 1.5rem 2rem; }
+.sq-hero .hero-copy h1 { font-family: var(--sq-display); font-size: clamp(2.1rem, 3.7vw, 3.2rem); letter-spacing: -.01em; line-height: 1.04; margin: .55rem 0 .6rem; max-width: 20ch; color: var(--sq-deep); }
+.sq-hero .hero-copy h1 em { color: var(--sq-forest); font-style: italic; }
+.sq-hero .hero-copy p { font-size: 1rem; line-height: 1.55; max-width: 54ch; margin: 0 0 1rem; }
+.sq-hero .hero-actions { display: flex; gap: .7rem; flex-wrap: wrap; }
+.sq-hero .hero-panel.sq-hero-stats { position: static; inset: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; align-self: center; }
+@media (max-width: 900px) { .hero-section.sq-hero { grid-template-columns: 1fr; padding: 1.2rem 1.1rem; } }
+#quest-board .section-heading { margin-bottom: .5rem; align-items: center; }
+#quest-board .section-heading .eyebrow, #quest-board .section-heading .small-copy { display: none; }
+#quest-board .section-heading h2 { font-family: var(--sq-display); font-size: clamp(1.5rem, 2.4vw, 2rem); margin: 0; letter-spacing: 0; }
