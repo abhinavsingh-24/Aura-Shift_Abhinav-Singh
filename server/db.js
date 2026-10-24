@@ -36,22 +36,6 @@ const registrationSchema = new mongoose.Schema(
   { collection: 'registrations' },
 );
 
-const reportSchema = new mongoose.Schema(
-  {
-    id: { type: String, required: true, unique: true, sparse: true },
-    reporterId: { type: String, required: true, index: true },
-    reporterName: { type: String, required: true },
-    targetType: { type: String, enum: ['event', 'organizer'], required: true },
-    targetId: { type: String, required: true, index: true },
-    targetLabel: { type: String, required: true, maxlength: 160 },
-    reason: { type: String, required: true, enum: ['misleading', 'unsafe', 'spam', 'harassment', 'inappropriate', 'other'] },
-    details: { type: String, maxlength: 1000, default: '' },
-    status: { type: String, enum: ['received', 'reviewing', 'resolved', 'dismissed'], default: 'received', index: true },
-    createdAt: { type: Date, default: Date.now },
-  },
-  { collection: 'reports' },
-);
-
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
@@ -68,7 +52,6 @@ registrationSchema.index({ eventId: 1, participantId: 1 }, { unique: true });
 
 const RegistrationModel = mongoose.models.Registration || mongoose.model('Registration', registrationSchema);
 const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
-const ReportModel = mongoose.models.Report || mongoose.model('Report', reportSchema);
 
 async function connectMongo(uri) {
   if (!uri) return false;
@@ -87,5 +70,4 @@ module.exports = {
   EventModel,
   RegistrationModel,
   UserModel,
-  ReportModel,
 };

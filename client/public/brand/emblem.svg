@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="t"><title id="t">SIDEQUEST emblem</title>
-<circle cx="60" cy="60" r="57" fill="#254E3B"/>
-<circle cx="60" cy="60" r="51" fill="none" stroke="#C6A15B" stroke-width="1.6"/>
-<g stroke="#F5EEDC" stroke-width="2.2" stroke-linecap="round" opacity=".9"><path d="M9 60h7M104 60h7"/><path d="M24 24l4 4M96 24l-4 4" opacity=".6"/></g>
-<path d="M45 107 C45 88 81 86 73 69 C67 55 50 58 60 46" fill="none" stroke="#F5EEDC" stroke-width="6" stroke-linecap="round"/>
-<path d="M45 107 C45 88 81 86 73 69 C67 55 50 58 60 46" fill="none" stroke="#254E3B" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="0.1 5"/>
-<path d="M60 12 L64.8 26.2 L79 31 L64.8 35.8 L60 50 L55.2 35.8 L41 31 L55.2 26.2 Z" fill="#C6A15B"/>
-</svg>
