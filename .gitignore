@@ -10,3 +10,5 @@ client/.env.*
 .DS_Store
 coverage/
 *.log
+test-results/
+playwright-report/

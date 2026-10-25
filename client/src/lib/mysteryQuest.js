@@ -33,8 +33,9 @@ export function getMysteryQuest(events = [], options = {}) {
   });
   if (!future.length) return null;
   // Randomize the candidates first to avoid always favoring the same event on ties.
+  const randomFn = typeof options.random === 'function' ? options.random : Math.random;
   for (let i = future.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(randomFn() * (i + 1));
     [future[i], future[j]] = [future[j], future[i]];
   }
   future.sort((a, b) => b.matches.length - a.matches.length || a.start - b.start);

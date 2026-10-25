@@ -38,23 +38,25 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
     const r = layout[String(e.id)]?.regionId;
     if (r) acc[r] = (acc[r] || 0) + 1;
     return acc;
-  }, {}), [events, layout]);
+  }, {}), [regionEvents, layout]);
 
   const selected = useMemo(() => events.find((e) => String(e.id) === String(selectedId)) || null, [events, selectedId]);
 
-  const size = () => {
+  const [minScale, setMinScale] = useState(1);
+
+  const size = useCallback(() => {
     const el = viewportRef.current;
     const b = el ? el.getBoundingClientRect() : { width: 1200, height: 800 };
     return { vw: b.width || 1200, vh: b.height || 800 };
-  };
-  const minK = useCallback(() => { const { vw, vh } = size(); return Math.max(1, vh / (vw * ASPECT)); }, []);
+  }, []);
+  const minK = useCallback(() => { const { vw, vh } = size(); return Math.max(1, vh / (vw * ASPECT)); }, [size]);
 
   const clampCam = useCallback((next) => {
     const { vw, vh } = size();
     const k = clampNum(next.k, minK(), MAX_K);
     const cw = vw * k; const ch = vw * ASPECT * k;
     return { k, x: cw <= vw ? (vw - cw) / 2 : clampNum(next.x, vw - cw, 0), y: ch <= vh ? (vh - ch) / 2 : clampNum(next.y, vh - ch, 0) };
-  }, [minK]);
+  }, [minK, size]);
 
   const apply = useCallback((next, animated) => {
     const c = clampCam(next);
@@ -66,18 +68,30 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
     const k = vw < 700 ? 2.4 : Math.max(1, minK());
     const cw = vw * k; const ch = vw * ASPECT * k;
     return { k, x: (vw - cw) / 2, y: (vh - ch) / 2 };
-  }, [minK]);
+  }, [minK, size]);
 
-  useEffect(() => { apply(initialCam(), false); setReady(true); }, [apply, initialCam]);
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      apply(initialCam(), false);
+      const { vw, vh } = size();
+      setMinScale(Math.max(1, vh / (vw * ASPECT)));
+      setReady(true);
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [apply, initialCam, size]);
 
   // Keep the camera valid when the viewport resizes (rotation, window resize).
   useEffect(() => {
     const el = viewportRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
-    const ro = new ResizeObserver(() => apply(camRef.current, false));
+    const ro = new ResizeObserver(() => {
+      const { vw, vh } = size();
+      setMinScale(Math.max(1, vh / (vw * ASPECT)));
+      apply(camRef.current, false);
+    });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [apply]);
+  }, [apply, size]);
 
   const zoomAt = useCallback((factor, mx, my, animated = true) => {
     const { vw, vh } = size();
@@ -85,7 +99,7 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
     const k = clampNum(c.k * factor, minK(), MAX_K);
     const px = mx ?? vw / 2; const py = my ?? vh / 2;
     apply({ k, x: px - (px - c.x) * (k / c.k), y: py - (py - c.y) * (k / c.k) }, animated);
-  }, [apply, minK]);
+  }, [apply, minK, size]);
 
   const centerOn = useCallback((id, zoomTo) => {
     const p = layout[String(id)];
@@ -94,7 +108,7 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
     const k = Math.max(camRef.current.k, zoomTo || 1);
     const cw = vw * k; const ch = vw * ASPECT * k;
     apply({ k, x: vw / 2 - (p.x / MAP_W) * cw, y: vh / 2 - (p.y / MAP_H) * ch }, true);
-  }, [layout, apply]);
+  }, [layout, apply, size]);
 
   // Ctrl/⌘ + wheel zooms toward the cursor (plain wheel keeps scrolling the page).
   useEffect(() => {
@@ -161,7 +175,7 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
     const c = camRef.current;
     const sx = c.x + (p.x / MAP_W) * vw * c.k; const sy = c.y + (p.y / MAP_H) * vw * ASPECT * c.k;
     if (sx < 60 || sx > vw - 60 || sy < 50 || sy > vh - 50) centerOn(event.id, c.k);
-  }, [layout, centerOn]);
+  }, [layout, centerOn, size]);
 
   const handleSelect = useCallback((event) => { if (!movedRef.current) onSelect(event); }, [onSelect]);
 
@@ -220,7 +234,7 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
 
         <div className="map-controls" role="group" aria-label="Map controls">
           <button type="button" onClick={() => zoomAt(1.3)} aria-label="Zoom in" disabled={cam.k >= MAX_K - 0.001}>+</button>
-          <button type="button" onClick={() => zoomAt(1 / 1.3)} aria-label="Zoom out" disabled={cam.k <= minK() + 0.001}>−</button>
+          <button type="button" onClick={() => zoomAt(1 / 1.3)} aria-label="Zoom out" disabled={cam.k <= minScale + 0.001}>−</button>
           <button type="button" className="map-reset" onClick={() => apply(initialCam(), true)} aria-label="Reset map view">Reset</button>
           <span className="map-zoom-readout" aria-hidden="true">{zoomPct}%</span>
         </div>

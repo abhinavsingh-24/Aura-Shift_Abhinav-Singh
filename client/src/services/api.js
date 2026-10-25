@@ -16,12 +16,11 @@ async function request(path, options = {}) {
   let response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
-      credentials: 'same-origin',
+      credentials: 'include',
       ...options,
       headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     });
   } catch {
-    // fetch only rejects when the request never completed (offline, server down, blocked).
     throw new ApiError(`Cannot reach the SIDEQUEST server. ${BACKEND_HINT}`, { code: 'NETWORK' });
   }
 
@@ -31,10 +30,14 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const details = Array.isArray(data.errors) ? data.errors : [];
+    if (response.status === 429) {
+      const retryAfter = response.headers?.get ? response.headers.get('Retry-After') : null;
+      const retryHint = retryAfter ? ` Please wait ${retryAfter} second${retryAfter === '1' ? '' : 's'} before trying again.` : '';
+      throw new ApiError(`${data.message || 'Too many requests.'}${retryHint}`, { status: 429, code: 'RATE_LIMITED', details });
+    }
     if (data.message) {
       throw new ApiError(`${data.message}${details.length ? ` ${details.join(' ')}` : ''}`, { status: response.status, code: data.code || '', details });
     }
-    // No JSON message at all: this is almost always the dev proxy answering for a backend that is not running.
     const proxyFailure = [500, 502, 503, 504].includes(response.status) && !raw.trim().startsWith('{');
     throw new ApiError(
       proxyFailure
@@ -54,7 +57,6 @@ export function getEvents(params = {}) {
       query.append(key, value);
     }
   });
-
   const queryString = query.toString();
   return request(`/events${queryString ? `?${queryString}` : ''}`);
 }
@@ -70,6 +72,20 @@ export function createEvent(payload) {
   });
 }
 
+export function updateEvent(id, payload) {
+  return request(`/events/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateEventStatus(id, status) {
+  return request(`/events/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
 export function getRecommendations(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -81,11 +97,102 @@ export function getRecommendations(params = {}) {
       query.append(key, value);
     }
   });
-
   const queryString = query.toString();
   return request(`/recommendations${queryString ? `?${queryString}` : ''}`);
 }
 
+// Payment & Booking functions
+export function createPaymentOrder(payload) {
+  return request('/payments/create-order', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function verifyPayment(payload) {
+  return request('/payments/verify', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sandboxPay(payload) {
+  return request('/payments/sandbox-pay', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getMyBookings() {
+  return request('/my-bookings');
+}
+
+export function cancelBooking(bookingId, reason = 'User cancelled') {
+  return request(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// Organizer Portal functions
+export function getOrganizerEvents() {
+  return request('/organizer/events');
+}
+
+export function getOrganizerAttendees(eventId) {
+  return request(`/organizer/events/${encodeURIComponent(eventId)}/attendees`);
+}
+
+export function checkInTicket(payload) {
+  return request('/organizer/check-in', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getOrganizerStats() {
+  return request('/organizer/stats');
+}
+
+// Admin Portal functions
+export function getAdminOverview() {
+  return request('/admin/overview');
+}
+
+export function getAdminEvents() {
+  return request('/admin/events');
+}
+
+export function moderateAdminEvent(eventId, action) {
+  return request(`/admin/events/${encodeURIComponent(eventId)}/moderate`, {
+    method: 'PATCH',
+    body: JSON.stringify({ action }),
+  });
+}
+
+export function importAdminEvents(events) {
+  return request('/admin/import', {
+    method: 'POST',
+    body: JSON.stringify({ events }),
+  });
+}
+
+export function getAdminReports() {
+  return request('/admin/reports');
+}
+
+export function updateAdminReport(reportId, status) {
+  return request(`/admin/reports/${encodeURIComponent(reportId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function getAdminAuditLogs() {
+  return request('/admin/audit-logs');
+}
+
+// Legacy registration & insights
 export function registerForEvent(eventId) {
   return request(`/events/${encodeURIComponent(eventId)}/register`, {
     method: 'POST',
@@ -107,6 +214,13 @@ export function loginAccount(payload) {
 
 export function getCurrentUser() {
   return request('/auth/me');
+}
+
+export function updateUserPreferences(payload) {
+  return request('/user/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function logoutAccount() {

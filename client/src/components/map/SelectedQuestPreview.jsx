@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { REGIONS, regionForCategory } from '../../lib/mapLayout';
 import { categoryGlyph, formatLongDateTime } from '../../lib/format';
 
 export default function SelectedQuestPreview({ event, saved, onToggleSave, onClose, counts }) {
   const closeRef = useRef(null);
-  const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [event?.id]);
+  const [failedEventId, setFailedEventId] = useState(null);
+  const imageFailed = failedEventId === event?.id;
 
   if (!event) {
     return (
@@ -25,7 +25,7 @@ export default function SelectedQuestPreview({ event, saved, onToggleSave, onClo
       <button ref={closeRef} type="button" className="preview-close" onClick={onClose} aria-label="Close preview">×</button>
       <div className="preview-art">
         {event.imageUrl && !imageFailed
-          ? <img src={event.imageUrl} alt="" onError={() => setImageFailed(true)} />
+          ? <img src={event.imageUrl} alt="" onError={() => setFailedEventId(event?.id)} />
           : <span aria-hidden="true">{categoryGlyph(event.category)}</span>}
       </div>
       <span className="preview-cat">{event.category} · {region.name}</span>

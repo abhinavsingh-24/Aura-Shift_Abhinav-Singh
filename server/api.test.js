@@ -128,3 +128,119 @@ test('API validates events, creates quests, and handles registration safely', as
   const afterLogout = await fetch(`${base}/api/auth/me`, { headers: { Cookie: logoutResponse.headers.get('set-cookie').split(';')[0] } });
   assert.equal((await afterLogout.json()).user, null);
 });
+
+test('API handles event details, recommendations, insights, reports, and bookings with proper authorization', async (t) => {
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+
+  // 1. GET /api/events/:id (not found vs found)
+  const notFound = await fetch(`${base}/api/events/non-existent-id`);
+  assert.equal(notFound.status, 404);
+  assert.match((await notFound.json()).message, /Event not found/);
+
+  // 2. GET /api/recommendations
+  const recommendationsResponse = await fetch(`${base}/api/recommendations?interests=Music,Technology&city=Bengaluru`);
+  assert.equal(recommendationsResponse.status, 200);
+  const recData = await recommendationsResponse.json();
+  assert.ok(Array.isArray(recData.recommendations));
+
+  // 3. GET /api/insights
+  const insightsResponse = await fetch(`${base}/api/insights`);
+  assert.equal(insightsResponse.status, 200);
+  const insightsData = await insightsResponse.json();
+  assert.ok(typeof insightsData.totalRegistrations === 'number');
+  assert.ok(Array.isArray(insightsData.popularCategories));
+  assert.ok(Array.isArray(insightsData.topEvents));
+
+  // 4. Authenticated explorer for bookings and reporting
+  const userEmail = `explorer-reporting-${Date.now()}@example.com`;
+  const registerRes = await fetch(`${base}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'Report Tester', email: userEmail, password: 'safe-password-123', role: 'explorer' }),
+  });
+  assert.equal(registerRes.status, 201);
+  const userCookie = registerRes.headers.get('set-cookie').split(';')[0];
+
+  // GET /api/my-registrations requires auth
+  const unauthBookings = await fetch(`${base}/api/my-registrations`);
+  assert.equal(unauthBookings.status, 401);
+
+  const authBookings = await fetch(`${base}/api/my-registrations`, { headers: { Cookie: userCookie } });
+  assert.equal(authBookings.status, 200);
+  const bookingsData = await authBookings.json();
+  assert.ok(Array.isArray(bookingsData.bookings));
+
+  // 5. POST /api/reports
+  const unauthReport = await fetch(`${base}/api/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ targetType: 'organizer', targetId: 'org-test', targetLabel: 'Test Org', reason: 'spam', details: 'Spam' }),
+  });
+  assert.equal(unauthReport.status, 401);
+
+  // Organizer report with targetLabel (testing bug fix for req.body.targetLabel)
+  const organizerReportRes = await fetch(`${base}/api/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: userCookie },
+    body: JSON.stringify({
+      targetType: 'organizer',
+      targetId: 'org-troublesome-1',
+      targetLabel: 'Troublesome Host',
+      reason: 'spam',
+      details: 'Sending spam invitations constantly.',
+    }),
+  });
+  assert.equal(organizerReportRes.status, 201);
+  const reportPayload = await organizerReportRes.json();
+  assert.equal(reportPayload.report.targetLabel, 'Troublesome Host');
+  assert.equal(reportPayload.report.targetType, 'organizer');
+
+  // Duplicate report for the same target should return 409
+  const duplicateReport = await fetch(`${base}/api/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: userCookie },
+    body: JSON.stringify({
+      targetType: 'organizer',
+      targetId: 'org-troublesome-1',
+      targetLabel: 'Troublesome Host',
+      reason: 'spam',
+      details: 'Another report for same target.',
+    }),
+  });
+  assert.equal(duplicateReport.status, 409);
+
+  // Missing targetLabel for organizer report should return 400
+  const missingLabelReport = await fetch(`${base}/api/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: userCookie },
+    body: JSON.stringify({
+      targetType: 'organizer',
+      targetId: 'org-no-label',
+      reason: 'spam',
+      details: 'Missing label',
+    }),
+  });
+  assert.equal(missingLabelReport.status, 400);
+
+  // GET /api/my-reports
+  const unauthMyReports = await fetch(`${base}/api/my-reports`);
+  assert.equal(unauthMyReports.status, 401);
+
+  const myReportsRes = await fetch(`${base}/api/my-reports`, { headers: { Cookie: userCookie } });
+  assert.equal(myReportsRes.status, 200);
+  const myReportsData = await myReportsRes.json();
+  assert.ok(Array.isArray(myReportsData.reports));
+  assert.ok(myReportsData.reports.some((r) => r.targetId === 'org-troublesome-1'));
+
+  // 6. Malformed JSON handling
+  const malformedJson = await fetch(`${base}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{"invalid": json',
+  });
+  assert.equal(malformedJson.status, 400);
+  assert.match((await malformedJson.json()).message, /valid JSON/);
+});

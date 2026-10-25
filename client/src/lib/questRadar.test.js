@@ -45,3 +45,49 @@ test('Sunday weekend filter does not include the following weekend', () => {
   assert.equal(isInTimeframe(thisSunday, 'weekend', sundayNow), true);
   assert.equal(isInTimeframe(nextSaturday, 'weekend', sundayNow), false);
 });
+
+test('Radar handles empty event lists and non-array inputs safely', () => {
+  assert.deepEqual(rankRadarQuests([], { now }), []);
+  assert.deepEqual(rankRadarQuests(null, { now }), []);
+  assert.deepEqual(rankRadarQuests(undefined, { now }), []);
+});
+
+test('Radar handles missing fields and incomplete event records safely', () => {
+  const brokenEvents = [
+    {},
+    { id: 'missing-date', title: 'No Date Quest' },
+    { id: 'partial', category: null, city: undefined, date: '2026-10-25' },
+  ];
+  const result = rankRadarQuests(brokenEvents, { now, timeframe: 'any' });
+  assert.ok(Array.isArray(result));
+  assert.ok(result.length > 0);
+  assert.equal(result.find((r) => r.id === 'partial').city, undefined);
+});
+
+test('Radar handles invalid dates without crashing or throwing RangeError', () => {
+  const invalidDateEvents = [
+    { id: 'bad-1', date: 'not-a-date', startTime: 'invalid' },
+    { id: 'bad-2', date: '9999-99-99', startTime: '25:99' },
+    { id: 'good', date: '2026-10-25', startTime: '10:00' },
+  ];
+  const result = rankRadarQuests(invalidDateEvents, { now, timeframe: 'any' });
+  assert.ok(Array.isArray(result));
+  const bad1 = result.find((r) => r.id === 'bad-1');
+  assert.ok(bad1);
+  assert.equal(bad1.parsedDate, null);
+});
+
+test('Radar handles missing, null, or out-of-range coordinates safely', () => {
+  const coordEvents = [
+    { id: 'no-coords', title: 'No coords', date: '2026-10-25' },
+    { id: 'nan-coords', title: 'NaN coords', latitude: 'abc', longitude: null, date: '2026-10-25' },
+    { id: 'out-of-range', title: 'Extreme coords', latitude: 999, longitude: -999, date: '2026-10-25' },
+    { id: 'valid', title: 'Valid coords', latitude: 12.9352, longitude: 77.6245, date: '2026-10-25' },
+  ];
+  const userCoords = { latitude: 12.9352, longitude: 77.6245 };
+  const result = rankRadarQuests(coordEvents, { now, timeframe: 'any', userCoordinates: userCoords, radiusKm: '10' });
+  assert.deepEqual(result.map((r) => r.id), ['valid']);
+  assert.equal(distanceKm(userCoords, coordEvents[0]), null);
+  assert.equal(distanceKm(userCoords, coordEvents[1]), null);
+  assert.equal(distanceKm(userCoords, coordEvents[2]), null);
+});
