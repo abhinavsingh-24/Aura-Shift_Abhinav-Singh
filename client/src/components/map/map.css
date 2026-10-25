@@ -1,4 +1,4 @@
-.world-map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 1.1rem; align-items: start; }
+.world-map-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; align-items: start; }
 .world-map { position: relative; min-width: 0; }
 
 .map-viewport {
@@ -120,3 +120,18 @@
 .map-region-filter button.active > span:last-child { background: var(--sq-gold); color: var(--sq-deep); }
 .map-region-filter button:focus-visible { outline: 3px solid var(--sq-gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .map-region-filter button { transition: none; } .map-region-filter button:hover { transform: none; } }
+
+/* ---- event info card: floats over the map when a photo is clicked ---- */
+.world-map .quest-preview.is-overlay { position: absolute; z-index: 40; top: 64px; right: 76px; width: min(340px, calc(100% - 100px)); max-height: calc(100% - 110px); overflow: auto; border: 2px solid var(--sq-gold); box-shadow: 0 24px 50px -16px rgba(24, 59, 45, .6); animation: sq-pop .28s var(--sq-ease); }
+.world-map .quest-preview.is-overlay .preview-art { height: 150px; }
+.preview-price { display: inline-block; margin: 0 0 .6rem; padding: .15rem .65rem; border-radius: 999px; background: var(--sq-forest); color: #fff; font-weight: 700; font-size: .85rem; }
+.map-viewport { max-height: 74vh; }
+@keyframes sq-pop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+.quest-paper { transition: transform .28s var(--sq-ease), filter .28s var(--sq-ease), box-shadow .28s; }
+.paper-thumb { cursor: pointer; }
+.quest-paper:hover .paper-thumb img { transform: scale(1.06); }
+.paper-thumb img { transition: transform .3s ease; }
+@media (min-width: 1081px) { .map-viewport { aspect-ratio: 16 / 9; } }
+@media (max-width: 760px) {
+  .world-map .quest-preview.is-overlay { position: fixed; z-index: 1100; top: auto; left: 8px; right: 8px; bottom: 76px; width: auto; max-height: 60svh; border-radius: 18px; animation: sq-sheet .35s var(--sq-ease); }
+}
