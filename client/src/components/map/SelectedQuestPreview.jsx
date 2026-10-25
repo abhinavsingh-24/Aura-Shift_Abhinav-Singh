@@ -4,8 +4,10 @@ import { categoryGlyph, formatLongDateTime } from '../../lib/format';
 
 export default function SelectedQuestPreview({ event, saved, onToggleSave, onClose, counts }) {
   const closeRef = useRef(null);
-  const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [event?.id]);
+  const [failedEventId, setFailedEventId] = useState(null);
+  const imageFailed = failedEventId === event?.id;
+
+  useEffect(() => { if (event && closeRef.current) closeRef.current.focus({ preventScroll: true }); }, [event]);
 
   if (!event) {
     return (
@@ -21,11 +23,11 @@ export default function SelectedQuestPreview({ event, saved, onToggleSave, onClo
 
   const region = regionForCategory(event.category);
   return (
-    <aside className="quest-preview" aria-label={`Selected quest: ${event.title}`} aria-live="polite">
+    <aside className="quest-preview is-overlay" role="dialog" aria-label={`Selected quest: ${event.title}`}>
       <button ref={closeRef} type="button" className="preview-close" onClick={onClose} aria-label="Close preview">×</button>
       <div className="preview-art">
         {event.imageUrl && !imageFailed
-          ? <img src={event.imageUrl} alt="" onError={() => setImageFailed(true)} />
+          ? <img src={event.imageUrl} alt="" onError={() => setFailedEventId(event?.id)} />
           : <span aria-hidden="true">{categoryGlyph(event.category)}</span>}
       </div>
       <span className="preview-cat">{event.category} · {region.name}</span>
@@ -36,6 +38,7 @@ export default function SelectedQuestPreview({ event, saved, onToggleSave, onClo
         {event.organizerName && <div><dt>Hosted by</dt><dd>{event.organizerName}</dd></div>}
         {event.capacity ? <div><dt>Capacity</dt><dd>{event.capacity}</dd></div> : null}
       </dl>
+      {event.price != null && <p className="preview-price">{Number(event.price) > 0 ? `₹${event.price}` : 'Free'}</p>}
       <p className="preview-desc">{event.description}</p>
       <div className="preview-actions">
         <a className="primary-btn" href={`/quests/${encodeURIComponent(event.id)}`}>View quest</a>

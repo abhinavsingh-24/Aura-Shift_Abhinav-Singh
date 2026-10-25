@@ -1,0 +1,557 @@
+{
+  "events": [
+    {
+      "_id": "6adcd5f833754fca36a7d46a",
+      "id": "evt-1",
+      "title": "Sunset Open Mic Night",
+      "description": "An intimate evening of indie music, poetry, and stand-up from local creators and community voices.",
+      "category": "Music",
+      "interests": [
+        "Music",
+        "Community activities"
+      ],
+      "date": "2026-10-26",
+      "startTime": "19:00",
+      "city": "Bengaluru",
+      "locality": "Koramangala",
+      "venue": "The Rooftop Porch",
+      "organizerName": "City Beats Collective",
+      "capacity": 80,
+      "registrationUrl": "https://example.com/open-mic",
+      "latitude": 12.9352,
+      "longitude": 77.6245,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.393Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd5f833754fca36a7d46b",
+      "id": "evt-2",
+      "title": "Maker Lab Hack Sprint",
+      "description": "A hands-on design and prototyping session for builders exploring civic tech and hardware ideas.",
+      "category": "Technology",
+      "interests": [
+        "Technology",
+        "Workshops"
+      ],
+      "date": "2026-10-28",
+      "startTime": "18:30",
+      "city": "Bengaluru",
+      "locality": "Indiranagar",
+      "venue": "Prototype Hub",
+      "organizerName": "Future Foundry",
+      "capacity": 60,
+      "registrationUrl": "https://example.com/maker-lab",
+      "latitude": 12.9784,
+      "longitude": 77.6408,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.528Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd5f833754fca36a7d46c",
+      "id": "evt-3",
+      "title": "Weekend Football Mixer",
+      "description": "Friendly 5-a-side matches and social networking for players of every skill level.",
+      "category": "Sports",
+      "interests": [
+        "Sports",
+        "Community activities"
+      ],
+      "date": "2026-10-30",
+      "startTime": "08:30",
+      "city": "Bengaluru",
+      "locality": "Jayanagar",
+      "venue": "Greenfield Arena",
+      "organizerName": "Play Local",
+      "capacity": 32,
+      "registrationUrl": "https://example.com/football-mixer",
+      "latitude": 12.9308,
+      "longitude": 77.5838,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.592Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd5f833754fca36a7d46d",
+      "id": "evt-4",
+      "title": "Street Art Walk & Workshop",
+      "description": "Explore murals in the neighborhood and paint a collaborative wall panel with local artists.",
+      "category": "Art and culture",
+      "interests": [
+        "Art and culture",
+        "Community activities"
+      ],
+      "date": "2026-11-01",
+      "startTime": "17:00",
+      "city": "Hyderabad",
+      "locality": "Madhapur",
+      "venue": "Canvas Lane",
+      "organizerName": "Neighborhood Canvas",
+      "capacity": 40,
+      "registrationUrl": "https://example.com/art-walk",
+      "latitude": 17.4483,
+      "longitude": 78.3915,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.675Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd5f833754fca36a7d46e",
+      "id": "evt-5",
+      "title": "Career Skills Bootcamp",
+      "description": "A practical workshop covering portfolio storytelling, networking, and resume review for students and early professionals.",
+      "category": "Education",
+      "interests": [
+        "Education",
+        "Workshops"
+      ],
+      "date": "2026-11-05",
+      "startTime": "10:00",
+      "city": "Bengaluru",
+      "locality": "Whitefield",
+      "venue": "SkillNest Studio",
+      "organizerName": "Campus Orbit",
+      "capacity": 75,
+      "registrationUrl": "https://example.com/bootcamp",
+      "latitude": 12.9698,
+      "longitude": 77.75,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.754Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd5f833754fca36a7d46f",
+      "id": "evt-6",
+      "title": "Community Board Game Night",
+      "description": "Bring a friend or meet someone new while playing collaborative and competitive tabletop games.",
+      "category": "Gaming",
+      "interests": [
+        "Gaming",
+        "Community activities"
+      ],
+      "date": "2026-11-08",
+      "startTime": "18:00",
+      "city": "Bengaluru",
+      "locality": "Koramangala",
+      "venue": "Quest Lounge",
+      "organizerName": "Local Tabletop Circle",
+      "capacity": 50,
+      "registrationUrl": "https://example.com/board-game-night",
+      "latitude": 12.9344,
+      "longitude": 77.618,
+      "isSampleData": true,
+      "createdAt": "2026-10-24T15:59:52.833Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcea92f76531c27c340d9f",
+      "id": "evt-b9830b41-099c-4a3c-9a65-e495e3d46a63",
+      "title": "E2E Secret Concert 1792862864077",
+      "description": "An exclusive acoustic live experience in the garden.",
+      "category": "Music",
+      "interests": [
+        "Music",
+        "Indie",
+        "Acoustic"
+      ],
+      "date": "2026-10-28",
+      "startTime": "19:30",
+      "city": "Bengaluru",
+      "locality": "Indiranagar",
+      "venue": "Acoustic Loft",
+      "organizerName": "Organizer 1792862864077",
+      "capacity": 50,
+      "ownerId": "user-691352f3-397d-4513-8416-af3947f3af73",
+      "isSampleData": false,
+      "createdAt": "2026-10-24T17:27:46.924Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec64eb8661d895afb394",
+      "id": "evt-a7f10685-71d0-44a7-b701-d9c119326556",
+      "title": "Concert Tour 1792863330579",
+      "description": "An exclusive acoustic live experience in the garden.",
+      "category": "Music",
+      "interests": [
+        "Music",
+        "Indie",
+        "Acoustic"
+      ],
+      "date": "2026-10-28",
+      "startTime": "19:30",
+      "city": "Bengaluru",
+      "locality": "Indiranagar",
+      "venue": "Acoustic Loft",
+      "organizerName": "Host 1792863330579",
+      "capacity": 50,
+      "ownerId": "6adcec63eb8661d895afb393",
+      "isSampleData": false,
+      "createdAt": "2026-10-24T17:35:32.967Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adceccebe24b0d76516f1e1",
+      "id": "evt-df66ede8-e636-4b0f-9219-6c2e38ef85e5",
+      "title": "Concert Tour 1792863435832",
+      "description": "An exclusive acoustic live experience in the garden.",
+      "category": "Music",
+      "interests": [
+        "Music",
+        "Indie",
+        "Acoustic"
+      ],
+      "date": "2026-10-28",
+      "startTime": "19:30",
+      "city": "Bengaluru",
+      "locality": "Indiranagar",
+      "venue": "Acoustic Loft",
+      "organizerName": "Host 1792863435832",
+      "capacity": 50,
+      "ownerId": "6adcecccbe24b0d76516f1e0",
+      "isSampleData": false,
+      "createdAt": "2026-10-24T17:37:18.373Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0df2c48dc8db328f0f4",
+      "id": "evt-42378ce2-3105-4f13-aefb-23062bab849d",
+      "title": "Concert Tour 1792864476078",
+      "description": "An exclusive acoustic live experience in the garden.",
+      "category": "Music",
+      "interests": [
+        "Music",
+        "Indie",
+        "Acoustic"
+      ],
+      "date": "2026-10-28",
+      "startTime": "19:30",
+      "city": "Bengaluru",
+      "locality": "Indiranagar",
+      "venue": "Acoustic Loft",
+      "organizerName": "Host 1792864476078",
+      "capacity": 50,
+      "ownerId": "6adcf0dc2c48dc8db328f0f3",
+      "isSampleData": false,
+      "createdAt": "2026-10-24T17:54:39.773Z",
+      "__v": 0
+    }
+  ],
+  "reports": [
+    {
+      "_id": "6adcebbe4e4042322c74e309",
+      "id": "report-d6a35914-5d94-44e7-8968-2d0db66cf537",
+      "reporterId": "6adcebbd4e4042322c74e308",
+      "reporterName": "Safety Reporter",
+      "targetType": "event",
+      "targetId": "evt-1",
+      "targetLabel": "Sunset Open Mic Night",
+      "reason": "unsafe",
+      "details": "Test safety report detail for moderation verification.",
+      "status": "received",
+      "createdAt": "2026-10-24T17:32:46.459Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec6beb8661d895afb396",
+      "id": "report-1bef031f-0238-45ae-91c3-b7d9950c1c0b",
+      "reporterId": "6adcec69eb8661d895afb395",
+      "reporterName": "Safety Reporter",
+      "targetType": "event",
+      "targetId": "evt-1",
+      "targetLabel": "Sunset Open Mic Night",
+      "reason": "unsafe",
+      "details": "Test safety report detail for moderation verification.",
+      "status": "received",
+      "createdAt": "2026-10-24T17:35:39.360Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecd4be24b0d76516f1e3",
+      "id": "report-eb7ce846-0d8f-47e8-bbe9-d2781f9864e4",
+      "reporterId": "6adcecd3be24b0d76516f1e2",
+      "reporterName": "Safety Reporter",
+      "targetType": "event",
+      "targetId": "evt-1",
+      "targetLabel": "Sunset Open Mic Night",
+      "reason": "unsafe",
+      "details": "Test safety report detail for moderation verification.",
+      "status": "received",
+      "createdAt": "2026-10-24T17:37:24.611Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0eb2c48dc8db328f0f6",
+      "id": "report-dd1a75a4-f54d-4b76-9d90-295bb21d39fe",
+      "reporterId": "6adcf0e82c48dc8db328f0f5",
+      "reporterName": "Safety Reporter",
+      "targetType": "event",
+      "targetId": "evt-1",
+      "targetLabel": "Sunset Open Mic Night",
+      "reason": "unsafe",
+      "details": "Test safety report detail for moderation verification.",
+      "status": "received",
+      "createdAt": "2026-10-24T17:54:51.006Z",
+      "__v": 0
+    }
+  ],
+  "registrations": [
+    {
+      "_id": "6adcd6a133754fca36a7d471",
+      "id": "reg-27bef09f-61d6-4577-b1c4-4ab3634260a0",
+      "eventId": "evt-6",
+      "participantId": "user-6e62c1ec-fa01-4439-9c1f-149546b61a05",
+      "participantName": "Pranav Humne",
+      "createdAt": "2026-10-24T16:02:41.718Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcd7145a05ce45f1ccd9d8",
+      "id": "reg-8f57e0fa-ddc6-408c-ba16-d9bc09f4ae08",
+      "eventId": "evt-1",
+      "participantId": "user-6e62c1ec-fa01-4439-9c1f-149546b61a05",
+      "participantName": "Pranav Humne",
+      "createdAt": "2026-10-24T16:04:36.388Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcebae4e4042322c74e306",
+      "id": "reg-2a0e4ee0-a7a8-4368-94bd-72e98a3ccf8e",
+      "eventId": "evt-1",
+      "participantId": "6adcebac4e4042322c74e305",
+      "participantName": "Booker Explorer",
+      "createdAt": "2026-10-24T17:32:30.285Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec62eb8661d895afb392",
+      "id": "reg-1ddb063b-cd69-46e9-b6d6-5ba37d0e2a45",
+      "eventId": "evt-1",
+      "participantId": "6adcec60eb8661d895afb391",
+      "participantName": "Booker Explorer",
+      "createdAt": "2026-10-24T17:35:30.000Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adceccbbe24b0d76516f1df",
+      "id": "reg-bed5d78c-c914-42df-b675-145f80bb5b6c",
+      "eventId": "evt-1",
+      "participantId": "6adcecc9be24b0d76516f1de",
+      "participantName": "Booker Explorer",
+      "createdAt": "2026-10-24T17:37:15.245Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0da2c48dc8db328f0f2",
+      "id": "reg-14093804-d423-45f5-8b8b-34cf31f8db0b",
+      "eventId": "evt-1",
+      "participantId": "6adcf0d62c48dc8db328f0f1",
+      "participantName": "Booker Explorer",
+      "createdAt": "2026-10-24T17:54:34.524Z",
+      "__v": 0
+    }
+  ],
+  "users": [
+    {
+      "_id": "6adcd68533754fca36a7d470",
+      "id": "user-6e62c1ec-fa01-4439-9c1f-149546b61a05",
+      "name": "Pranav Humne",
+      "email": "pinkeshchavhan159@gmail.com",
+      "passwordHash": "9585c6b618a3fdd9ff32a49ec1b242bd:4c2a488beb3176fdd0dfdf0e832fa278ffd60f7bc3494b66283e9782f19089c778205cef030a0571565553ae60079e12a249a959282df54faeadc3706c93aa83",
+      "role": "explorer",
+      "createdAt": "2026-10-24T16:02:13.984Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcea5ff76531c27c340d9d",
+      "id": "user-597fd5fd-b199-4777-918b-090556abfb84",
+      "name": "Atlas Explorer",
+      "email": "e2e-explorer-1792862815172@example.com",
+      "passwordHash": "fca52a4343ffbb3beb013f6205f60711:a405ca6ccd5e30aafd793898860d561632bb5bdf71e2502955f0b86698479ac88bb73259309db69506a275edac6a806a7a6809ac49d4456b65e8e46e97faef30",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:26:55.925Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcea91f76531c27c340d9e",
+      "id": "user-691352f3-397d-4513-8416-af3947f3af73",
+      "name": "Organizer 1792862864077",
+      "email": "e2e-organizer-1792862864077@example.com",
+      "passwordHash": "367c2d5f524015646ffb34c43b30b3a0:768fbe12e2e7e94c72a5ae17b0de13486e3261993ede2e513eeaa2d230f24547b5f7ec231460b674f2efc08bd122f871e7bdbd7bc42d8033b195a4f0db815733",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:27:45.109Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcebaa4e4042322c74e304",
+      "name": "Atlas Explorer",
+      "email": "explorer-auth-1792863146137@example.com",
+      "passwordHash": "58b48d22bbdca36f0a3526fb2860c5c5:86d16bb0c294dc34cd8757d4874eaed3cfe746fe7ef02377a31ed98cbad18d93aebc6b272ef0d56137bd1136305c58bf939b5ba169100cf9aa6741838b49ba23",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:32:26.653Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcebac4e4042322c74e305",
+      "name": "Booker Explorer",
+      "email": "test-1792863148394-yperz@example.com",
+      "passwordHash": "73ee532ac1da926f9aa388c4a114fa8d:e49adc583b631d599aa142fd4ee92e4078bcbcc57b0c761d290c4b91938f0c445f63d742c76a2f58d6b0225602525f186697e23402bb9c7f0cd987fc93564826",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:32:28.952Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcebaf4e4042322c74e307",
+      "name": "Host 1792863150827",
+      "email": "test-1792863150827-wbia6@example.com",
+      "passwordHash": "4b7917e0b643b98b419c4f87c5135b2c:f6ec7c26f30c1de1abc852a0c9eb0c87896c9a9e0dfa096ada25b8b10e04eb351d5969795b3fb8cd513ebaee48ca8782a5176651bc6bb0fc1ca3d3670cfc9c37",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:32:31.319Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcebbd4e4042322c74e308",
+      "name": "Safety Reporter",
+      "email": "test-1792863164953-e1dpr@example.com",
+      "passwordHash": "5d95f320995ab8047e76df283dd4aa82:454ee9c2eb2ab5c868ba05605242d235e5f20a82cfeab47e1cac80dae9a7ed05f1b9de652a04f2469b928e9d6a00e72e0e15a14ca49ed6b1bd3183cd1852499a",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:32:45.458Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec5feb8661d895afb390",
+      "name": "Atlas Explorer",
+      "email": "explorer-auth-1792863326805@example.com",
+      "passwordHash": "8ce8027d74a2b5e86ccdc2334cd03c5e:4e6c323543d4e889c5299cf04c03f886faef3e6957342b7b7a21d55e10dcb94a2775f41611111b3b612b47913aa0b75e320084c452fb08930f3c816bcd253bee",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:35:27.322Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec60eb8661d895afb391",
+      "name": "Booker Explorer",
+      "email": "test-1792863328373-2x45r@example.com",
+      "passwordHash": "b54b9f772905932be8ac2d1b77c3f3f2:00f0cbe4f26cee87d1af2144aa786fb6ed703fd1083cee598883334bade5721c96b55fd280959169de4fe1f5b4876426349626ad5b9ce02947bdb86bbecdad1d",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:35:28.874Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec63eb8661d895afb393",
+      "name": "Host 1792863330579",
+      "email": "test-1792863330579-31psg@example.com",
+      "passwordHash": "1ce3ad3171253fa227bbd4b7d73b038b:bc3ecdebe6f68dd5aa8033e86d4181b604074c38bcf4bea7726afab22a4e1a8d976662c77d6df23ce90615e3b32a1c67422ff55391dd62a0863cb3e86833b121",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:35:31.160Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec69eb8661d895afb395",
+      "name": "Safety Reporter",
+      "email": "test-1792863337480-kh3oy@example.com",
+      "passwordHash": "0d02189ca6c0a20bce400546491a36f1:5b8c5b48ef196c0e2ee4496911eee248782ab8edaafb1fe79d235e098654d622df753f6df36dd7073f5ca47361594efb39f4edb24560317d02bfaf6220c2b9ca",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:35:37.980Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcec8128ccd79ae067936e",
+      "name": "Atlas Explorer",
+      "email": "explorer-auth-1792863360858@example.com",
+      "passwordHash": "263ec310da802cbb907e6ac11f6876a3:768658de35e7342762fa22ec8f0546ec0716b9fa588cd613c26f9027fc6fc27661cc6d0121a71b1799d755f1f183010cc5bc89204760e76d970f8262fb4d1a57",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:36:01.719Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adceca128ccd79ae067936f",
+      "name": "Booker Explorer",
+      "email": "test-1792863392929-smla5@example.com",
+      "passwordHash": "31e89ac26bc06de6f8aae26f8a5459d7:1eb5fa5310e84751621c0c0f284a4763c03495bf3d193149db14c40b6031c5ae9e02a4380a88b166c61a36c3a516eb58819b2a0b4cc0f08683be2a8de7fd3399",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:36:33.864Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecaa28ccd79ae0679370",
+      "name": "Host 1792863400868",
+      "email": "test-1792863400868-vh1om@example.com",
+      "passwordHash": "24cb1915cdf248c9e8f6b8ec85b7e223:bc96cd71dd65c4f7c9c99bb8443b15d3e510d69a5d88476fa1f295988f92581159e3315f1165a5665a39a24ab84dba3c90fc194bcf8af0ee75af8845ad8e1c20",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:36:42.947Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecc8be24b0d76516f1dd",
+      "name": "Atlas Explorer",
+      "email": "explorer-auth-1792863431874@example.com",
+      "passwordHash": "e370e768d15965af4f78015bbdedca0d:426c72bed85dc6440cbc0bc52568da30203d54df4fa95e21267eba044037828f2531f3ce4e83124115a146546803eac4eb72bc8355260a1821794fc064b22caf",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:37:12.373Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecc9be24b0d76516f1de",
+      "name": "Booker Explorer",
+      "email": "test-1792863433361-oqyot@example.com",
+      "passwordHash": "117a00528adeb920b69976e8e09c4389:36ad1b425016dd9e031600344ae57cdfbb946c519526566bfba55eb9da5bc91a70a4af4c29a12dba48dee0a83b37cbc42b3666aa95a04be2bbafa8890bf394b8",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:37:13.899Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecccbe24b0d76516f1e0",
+      "name": "Host 1792863435832",
+      "email": "test-1792863435832-hhsz6@example.com",
+      "passwordHash": "7a1d9ff0ca957467c2aca86a2a89c114:e179397da609d4f635005e674be2c293c907837bcf930a9c53ca2d5ac055d8612f203e1be71a56c05464f285e21cc76db0099251392f128020b39e0c9a8365ed",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:37:16.523Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcecd3be24b0d76516f1e2",
+      "name": "Safety Reporter",
+      "email": "test-1792863442963-6pbjq@example.com",
+      "passwordHash": "59194eea8e5f7e0e9b39dc19db74c520:52aa8fafb1c93ba44835484a1224cbdfaf37e3b29308f94cd4fe7d26310a1034bd1c18348ce2cf633dddafcdcbe2b8318c54383d9ffddea8d2edffdddc250958",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:37:23.598Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0d22c48dc8db328f0f0",
+      "name": "Atlas Explorer",
+      "email": "explorer-auth-1792864465990@example.com",
+      "passwordHash": "2f0430d05f89585e8fc75fff9126bfdb:cde8bacb2b2c800cf16edaa80311faea1a2a6ee1287c61cb778f46b3733b5f0da6c161daaf96b7319bf4f0e40f6b68e6d320db57c74a6237a00612bdc66d3c81",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:54:26.915Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0d62c48dc8db328f0f1",
+      "name": "Booker Explorer",
+      "email": "test-1792864469846-j5ty7@example.com",
+      "passwordHash": "5f1ee364954016edb5f83d33eac5a522:629bcf7a0dd3ebd28a9a5001d2965eb313d2d42fc7aac0a8f536b718ef1c7150d989f72a8b8164514f1c44eadb775207c82a978fec0a4e6707314a3dd376c988",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:54:30.765Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0dc2c48dc8db328f0f3",
+      "name": "Host 1792864476078",
+      "email": "test-1792864476078-ddrec@example.com",
+      "passwordHash": "95e7c51de5bf040cd756f328b4265039:26878bdf5d9e781f867387660377445d087f5ce26c3543b41c8540f03dbd9b78e40d131bcb50d06ac3d21a2998de054396caad2ef66ee101125f8124b3ab6a58",
+      "role": "organizer",
+      "createdAt": "2026-10-24T17:54:36.848Z",
+      "__v": 0
+    },
+    {
+      "_id": "6adcf0e82c48dc8db328f0f5",
+      "name": "Safety Reporter",
+      "email": "test-1792864487871-hcx4s@example.com",
+      "passwordHash": "31b6b04146ee5be0b18e48c80f8cd03b:26c7c8d7606ec3b0dc2faa374c337236f6af83c41799eaecba1c8e3c26e6a171059f56da49b248352678560115531bab920a2044ac1e67e116ac2987422a8aa1",
+      "role": "explorer",
+      "createdAt": "2026-10-24T17:54:48.533Z",
+      "__v": 0
+    }
+  ]
+}

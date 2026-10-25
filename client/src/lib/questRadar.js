@@ -2,7 +2,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 function parseEventDate(event) {
   if (!event?.date) return null;
-  const value = new Date(`${event.date}T${event.startTime || '23:59'}:00`);
+  if (event.date instanceof Date) {
+    return Number.isNaN(event.date.getTime()) ? null : event.date;
+  }
+  const dateStr = String(event.date).trim();
+  if (Number.isNaN(Date.parse(dateStr))) return null;
+  const timeStr = event.startTime && /^\d{1,2}:\d{2}/.test(String(event.startTime).trim())
+    ? String(event.startTime).trim()
+    : '23:59';
+  const value = new Date(`${dateStr}T${timeStr}:00`);
   return Number.isNaN(value.getTime()) ? null : value;
 }
 
@@ -56,7 +64,13 @@ export function rankRadarQuests(events = [], filters = {}) {
   const radius = filters.radiusKm === 'any' || filters.radiusKm === undefined ? null : Number(filters.radiusKm);
   const results = (Array.isArray(events) ? events : []).filter((event) => {
     if (!isInTimeframe(event, filters.timeframe || 'any', now)) return false;
-    if (filters.category && filters.category !== 'all' && event.category !== filters.category) return false;
+    if (filters.category && filters.category !== 'all') {
+      const evCat = String(event.category || '').toLowerCase();
+      const filterCat = String(filters.category).toLowerCase();
+      if (evCat !== filterCat && !evCat.includes(filterCat) && !filterCat.includes(evCat)) {
+        return false;
+      }
+    }
     if (filters.city && filters.city !== 'all' && event.city !== filters.city) return false;
     if (filters.locality && filters.locality !== 'all' && event.locality !== filters.locality) return false;
     if (coordinates && Number.isFinite(radius)) {
@@ -77,12 +91,21 @@ export function rankRadarQuests(events = [], filters = {}) {
     if (!reasons.length) reasons.push('A chance to explore something new');
     const recencyScore = Number.isFinite(hoursUntil) ? Math.max(0, 20 - hoursUntil / 24) : 0;
     const score = (match ? 100 : 0) + recencyScore + (distance !== null ? Math.max(0, 15 - distance / 5) : 0);
-    return { event, score, distanceKm: distance, date, reasons, matchLabel: match ? 'Interest match' : '' };
+    return {
+      ...event,
+      event,
+      score,
+      distanceKm: distance,
+      date: event.date,
+      parsedDate: date,
+      reasons,
+      matchLabel: match ? 'Interest match' : '',
+    };
   });
 
-  if (filters.sort === 'soonest') results.sort((a, b) => (a.date?.getTime() ?? Infinity) - (b.date?.getTime() ?? Infinity));
+  if (filters.sort === 'soonest') results.sort((a, b) => (a.parsedDate?.getTime() ?? Infinity) - (b.parsedDate?.getTime() ?? Infinity));
   else if (filters.sort === 'nearest' && coordinates) results.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-  else results.sort((a, b) => b.score - a.score || (a.date?.getTime() ?? Infinity) - (b.date?.getTime() ?? Infinity));
+  else results.sort((a, b) => b.score - a.score || (a.parsedDate?.getTime() ?? Infinity) - (b.parsedDate?.getTime() ?? Infinity));
   return results;
 }
 

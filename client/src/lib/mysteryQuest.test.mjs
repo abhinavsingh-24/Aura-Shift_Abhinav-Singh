@@ -11,10 +11,23 @@ const events = [
 ];
 
 test('Mystery Quest skips past events and prefers the explorer interests', () => {
-  const result = getMysteryQuest(events, { now, interests: ['Music'] });
-  assert.equal(result.event.id, 'music');
+  const result = getMysteryQuest(events, { now, interests: ['Music'], random: () => 0.5 });
+  assert.notEqual(result.event.id, 'past');
+  assert.notEqual(result.event.id, 'tech', 'an interest match must outrank a non-match');
   assert.match(result.reasons[0], /music/i);
   assert.equal(result.candidatesCount, 3);
+});
+
+test('Mystery Quest breaks equal-interest ties randomly but only among true ties', () => {
+  const picks = new Set();
+  for (const r of [0, 0.4, 0.99]) picks.add(getMysteryQuest(events, { now, interests: ['Music'], random: () => r }).event.id);
+  assert.ok([...picks].every((id) => ['music', 'other-city'].includes(id)), `unexpected pick in ${[...picks]}`);
+});
+
+test('Mystery Quest with no interests is deterministic for a given random source', () => {
+  const a = getMysteryQuest(events, { now, random: () => 0.3 });
+  const b = getMysteryQuest(events, { now, random: () => 0.3 });
+  assert.equal(a.event.id, b.event.id);
 });
 
 test('Mystery Quest respects category and city constraints', () => {
