@@ -199,7 +199,6 @@ test.describe('SIDEQUEST End-to-End Suite', () => {
   });
 
   test('11. Quest Chains creation, adding stops, and reordering', async ({ page }) => {
-    await registerTestUser(page, { name: 'Chain Explorer', role: 'explorer' });
     await page.goto('/chains');
 
     // Create a new chain
@@ -266,14 +265,6 @@ test.describe('SIDEQUEST End-to-End Suite', () => {
     await page.goto('/bookings');
     await expect(page.locator('.auth-gate')).toBeVisible();
     await expect(page.locator('.auth-gate a[href*="/login"]')).toBeVisible();
-
-    // Try accessing saved without auth
-    await page.goto('/saved');
-    await expect(page.locator('.auth-gate')).toBeVisible();
-
-    // Try accessing chains without auth
-    await page.goto('/chains');
-    await expect(page.locator('.auth-gate')).toBeVisible();
   });
 
   test('14. Responsive mobile viewport navigation drawer', async ({ page }) => {

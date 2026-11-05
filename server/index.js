@@ -8,6 +8,7 @@ const { verifiedIndiaEvents } = require('./indiaEvents');
 const { rankEvents } = require('./recommendations');
 const { validateReportDraft } = require('./reportRules');
 const { createRateLimiter } = require('./rateLimit');
+const { parseNearbyQuery, findNearbyEvents } = require('./nearby');
 const {
   connectMongo,
   EventModel,
@@ -280,12 +281,6 @@ function safeUser(user) {
     organizationName: user.organizationName || '',
     isVerified: Boolean(user.isVerified),
     createdAt: user.createdAt,
-    interests: Array.isArray(user.interests) ? user.interests : [],
-    preferredCity: user.preferredCity || '',
-    preferredLocality: user.preferredLocality || '',
-    onboardingCompleted: Boolean(user.onboardingCompleted),
-    remindersEnabled: user.remindersEnabled !== false,
-    reminderLeadTime: user.reminderLeadTime || '1hour',
   };
 }
 
@@ -354,17 +349,6 @@ async function authenticatedUser(req) {
   const payload = verifySession(cookieValue(req, SESSION_COOKIE));
   if (!payload) return null;
   return findUserById(payload.sub);
-}
-
-async function requireAuth(req, res, next) {
-  try {
-    const user = await authenticatedUser(req);
-    if (!user) return res.status(401).json({ message: 'Authentication required.' });
-    req.user = safeUser(user);
-    return next();
-  } catch (error) {
-    return res.status(500).json({ message: 'Unable to verify your account right now.' });
-  }
 }
 
 async function requireOrganizer(req, res, next) {
@@ -520,45 +504,6 @@ app.post('/api/auth/logout', (req, res) => {
   return res.json({ message: 'You have been signed out.' });
 });
 
-app.patch('/api/user/preferences', requireAuth, async (req, res) => {
-  try {
-    const { interests, preferredCity, preferredLocality, onboardingCompleted, remindersEnabled, reminderLeadTime } = req.body || {};
-    const updates = {};
-    if (Array.isArray(interests)) updates.interests = interests.map((s) => String(s).trim()).filter(Boolean);
-    if (typeof preferredCity === 'string') updates.preferredCity = preferredCity.trim();
-    if (typeof preferredLocality === 'string') updates.preferredLocality = preferredLocality.trim();
-    if (typeof onboardingCompleted === 'boolean') updates.onboardingCompleted = onboardingCompleted;
-    if (typeof remindersEnabled === 'boolean') updates.remindersEnabled = remindersEnabled;
-    if (typeof reminderLeadTime === 'string') updates.reminderLeadTime = reminderLeadTime.trim();
-
-    let updatedUser;
-    if (mongoReady) {
-      updatedUser = await UserModel.findOneAndUpdate(
-        { $or: [{ id: req.user.id }, { _id: req.user.id }] },
-        { $set: updates },
-        { new: true }
-      ).lean();
-    } else {
-      const idx = inMemoryState.users.findIndex((u) => u.id === req.user.id || String(u._id) === req.user.id);
-      if (idx !== -1) {
-        inMemoryState.users[idx] = { ...inMemoryState.users[idx], ...updates };
-        updatedUser = inMemoryState.users[idx];
-      }
-    }
-
-    if (!updatedUser) {
-      updatedUser = { ...req.user, ...updates };
-    }
-
-    return res.json({
-      message: 'Preferences updated successfully.',
-      user: safeUser(updatedUser),
-    });
-  } catch (error) {
-    return res.status(500).json({ message: 'Unable to update preferences.' });
-  }
-});
-
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -674,6 +619,43 @@ app.get('/api/events', async (req, res) => {
   res.json({
     count: filtered.length,
     events: filtered.map(normalizeEvent),
+  });
+});
+
+
+app.get('/api/events/nearby', (req, res) => {
+  // Validate coordinates and optional search parameters.
+  const validation = parseNearbyQuery(req.query);
+
+  if (validation.errors.length > 0) {
+    return res.status(400).json({
+      message: 'Invalid nearby search parameters.',
+      errors: validation.errors,
+    });
+  }
+
+  // Use the same event eligibility rules as the main Quest Board.
+  const eligibleEvents = events
+    .filter((event) => event.status !== 'draft' && event.status !== 'cancelled')
+    .filter(isUpcomingEvent);
+
+  // Calculate distances and apply radius, category, keyword and sorting filters.
+  const nearby = findNearbyEvents(
+    eligibleEvents,
+    validation.params,
+    getEventDate
+  );
+
+  return res.json({
+    count: nearby.total,
+    total: nearby.total,
+    returned: nearby.results.length,
+    withoutCoordinates: nearby.withoutCoordinates,
+    radiusKm: validation.params.radiusKm,
+    events: nearby.results.map(({ event, distanceKm }) => ({
+      ...normalizeEvent(event),
+      distanceKm,
+    })),
   });
 });
 
@@ -1614,5 +1596,4 @@ if (require.main === module) {
 }
 
 app.startDatabase = startDatabase;
-app.inMemoryState = inMemoryState;
 module.exports = app;

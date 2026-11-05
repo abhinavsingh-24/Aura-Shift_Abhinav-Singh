@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:5199',
-    trace: 'retain-on-failure',
+    trace: 'off',
   },
   webServer: [
     {

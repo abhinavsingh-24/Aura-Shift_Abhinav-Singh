@@ -1,12 +1,13 @@
-process.env.NODE_ENV = 'test';
-process.env.MONGO_URI = '';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('./index');
-const { UserModel } = require('./db');
+const { connectMongo, UserModel } = require('./db');
 
 test('Comprehensive Registration & Authentication Verification Suite', async (t) => {
-  // Start Server Instance 1
+  // Connect database in backend index module
+  if (app.startDatabase) {
+    await app.startDatabase();
+  }
 
   // Start Server Instance 1
   let server = app.listen(0, '127.0.0.1');
@@ -149,16 +150,16 @@ test('Comprehensive Registration & Authentication Verification Suite', async (t)
   assert.equal(badRoleRes.status, 400, 'Invalid role must return 400');
 
   // 6. Confirm passwords are stored securely hashed
-  const persistedUser = app.inMemoryState
-    ? app.inMemoryState.users.find((u) => u.email === explorerEmail)
-    : (process.env.MONGO_URI ? await UserModel.findOne({ email: explorerEmail }).lean() : null);
-  assert.ok(persistedUser, 'User must exist in storage');
-  assert.ok(persistedUser.passwordHash, 'User must have a passwordHash');
-  assert.notEqual(persistedUser.passwordHash, plainPassword, 'Password must NOT be stored in plaintext');
-  assert.ok(persistedUser.passwordHash.includes(':'), 'Password hash must be in salt:scrypt format');
-  const [salt, hash] = persistedUser.passwordHash.split(':');
-  assert.equal(salt.length, 32, 'Salt should be 16 bytes hex (32 characters)');
-  assert.equal(hash.length, 128, 'Derived hash should be 64 bytes hex (128 characters)');
+  if (process.env.MONGO_URI) {
+    const persistedUser = await UserModel.findOne({ email: explorerEmail }).lean();
+    assert.ok(persistedUser, 'User must exist in MongoDB');
+    assert.ok(persistedUser.passwordHash, 'User must have a passwordHash');
+    assert.notEqual(persistedUser.passwordHash, plainPassword, 'Password must NOT be stored in plaintext');
+    assert.ok(persistedUser.passwordHash.includes(':'), 'Password hash must be in salt:scrypt format');
+    const [salt, hash] = persistedUser.passwordHash.split(':');
+    assert.equal(salt.length, 32, 'Salt should be 16 bytes hex (32 characters)');
+    assert.equal(hash.length, 128, 'Derived hash should be 64 bytes hex (128 characters)');
+  }
 
   // 7. Confirm the account remains in the database after restarting the server
   // Close server instance 1

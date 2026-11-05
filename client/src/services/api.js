@@ -216,13 +216,6 @@ export function getCurrentUser() {
   return request('/auth/me');
 }
 
-export function updateUserPreferences(payload) {
-  return request('/user/preferences', {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
-}
-
 export function logoutAccount() {
   return request('/auth/logout', { method: 'POST', body: JSON.stringify({}) });
 }
