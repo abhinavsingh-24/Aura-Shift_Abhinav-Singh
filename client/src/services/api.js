@@ -50,7 +50,7 @@ async function request(path, options = {}) {
   return data;
 }
 
-export function getEvents(params = {}) {
+export async function getEvents(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -58,7 +58,32 @@ export function getEvents(params = {}) {
     }
   });
   const queryString = query.toString();
-  return request(`/events${queryString ? `?${queryString}` : ''}`);
+  try {
+    const data = await request(`/events${queryString ? `?${queryString}` : ''}`);
+    if (Array.isArray(data?.events) && data.events.length > 0 && !queryString) {
+      try {
+        localStorage.setItem('sidequest_cached_events', JSON.stringify(data.events));
+      } catch {
+        /* storage full */
+      }
+    }
+    return data;
+  } catch (err) {
+    if (!queryString) {
+      try {
+        const cached = localStorage.getItem('sidequest_cached_events');
+        if (cached) {
+          const events = JSON.parse(cached);
+          if (Array.isArray(events) && events.length > 0) {
+            return { events, isCachedFallback: true };
+          }
+        }
+      } catch {
+        /* fallback ignore */
+      }
+    }
+    throw err;
+  }
 }
 
 export function getEventById(id) {
@@ -216,6 +241,13 @@ export function getCurrentUser() {
   return request('/auth/me');
 }
 
+export function updateUserPreferences(payload) {
+  return request('/user/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function logoutAccount() {
   return request('/auth/logout', { method: 'POST', body: JSON.stringify({}) });
 }
@@ -234,4 +266,24 @@ export function submitReport(payload) {
 
 export function getMyReports() {
   return request('/my-reports');
+}
+
+export function getEventReviews(eventId) {
+  return request(`/events/${encodeURIComponent(eventId)}/reviews`);
+}
+
+export function postEventReview(eventId, payload) {
+  return request(`/events/${encodeURIComponent(eventId)}/reviews`, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function getMyUpcoming() {
+  return request('/my-upcoming');
+}
+
+export function getOrganizerAnalytics() {
+  return request('/organizer/analytics');
+}
+
+export function generateEventDescription(payload) {
+  return request('/organizer/generate-description', { method: 'POST', body: JSON.stringify(payload) });
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LocationAdmin from './location/LocationAdmin';
 import {
   getAdminOverview,
   getAdminEvents,
@@ -164,7 +165,16 @@ export default function AdminPortal({ currentUser }) {
         >
           📜 Audit Trail ({auditLogs.length})
         </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'locations' ? 'is-active' : ''}`}
+          onClick={() => setActiveTab('locations')}
+        >
+          📍 Locations
+        </button>
       </div>
+
+      {activeTab === 'locations' && <LocationAdmin />}
 
       {activeTab === 'overview' && (
         <div className="portal-tab-content">

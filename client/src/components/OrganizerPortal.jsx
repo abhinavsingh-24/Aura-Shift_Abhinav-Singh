@@ -6,7 +6,9 @@ import {
   checkInTicket,
   createEvent,
   updateEventStatus,
+  generateEventDescription,
 } from '../services/api';
+import OrganizerAnalytics from './OrganizerAnalytics';
 
 const CATEGORIES = [
   'Technology',
@@ -60,6 +62,28 @@ export default function OrganizerPortal({ currentUser, initialEvents = [], onEve
   const [scanInput, setScanInput] = useState('');
   const [scanResult, setScanResult] = useState(null);
   const [scanLoading, setScanLoading] = useState(false);
+  const [writing, setWriting] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    setWriting(true);
+    setError('');
+    try {
+      const { description } = await generateEventDescription({
+        title: formData.title,
+        category: formData.category,
+        city: formData.city,
+        venue: formData.venue,
+        isFree: !Number(formData.priceStarting),
+        price: Number(formData.priceStarting) || 0,
+        tone: 'friendly',
+      });
+      setFormData((current) => ({ ...current, description }));
+    } catch (err) {
+      setError(err.message || 'Could not generate a description.');
+    } finally {
+      setWriting(false);
+    }
+  };
 
   // New Event Form State
   const [formData, setFormData] = useState({
@@ -297,6 +321,8 @@ export default function OrganizerPortal({ currentUser, initialEvents = [], onEve
               <span className="metric-sub">{stats?.totalEvents || 0} total listings</span>
             </div>
           </div>
+
+          <OrganizerAnalytics />
 
           <div className="quick-access-section" style={{ marginTop: '2rem' }}>
             <h3>Fast Actions</h3>
@@ -619,6 +645,9 @@ export default function OrganizerPortal({ currentUser, initialEvents = [], onEve
 
               <div className="form-group">
                 <label>Description *</label>
+                <button type="button" className="secondary-btn btn-sm" disabled={writing} onClick={handleGenerateDescription} style={{ marginLeft: 8 }}>
+                  {writing ? 'Writing…' : '✨ Write with AI'}
+                </button>
                 <textarea
                   required
                   rows="4"

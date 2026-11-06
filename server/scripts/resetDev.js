@@ -9,9 +9,14 @@ const { seedDemoData } = require('./seedDemo');
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 async function resetDevelopmentDatabase() {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('[CRITICAL] db:reset:dev is strictly disallowed in production environment.');
-    process.exit(1);
+  if (process.env.NODE_ENV === 'production' || process.env.ALLOW_PRODUCTION_RESET !== 'true') {
+    const isAtlas = (process.env.MONGO_URI || '').includes('mongodb.net') || (process.env.MONGO_URI || '').includes('mongodb+srv');
+    if (isAtlas || process.env.NODE_ENV === 'production') {
+      console.error('[SAFETY GUARD] Destructive reset against MongoDB Atlas production cluster is strictly blocked.');
+      console.error('To preserve genuine events and user bookings, db:reset:dev is disabled against remote Atlas instances.');
+      console.error('If you genuinely intend to reset a remote staging DB, set ALLOW_PRODUCTION_RESET=true explicitly.');
+      process.exit(1);
+    }
   }
 
   const uri = process.env.MONGO_URI;

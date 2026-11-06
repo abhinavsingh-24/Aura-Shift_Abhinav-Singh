@@ -175,6 +175,13 @@ const userSchema = new mongoose.Schema(
     organizationName: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
     isDemoUser: { type: Boolean, default: false },
+    interests: { type: [String], default: [] },
+    preferredCity: { type: String, default: '' },
+    preferredLocality: { type: String, default: '' },
+    homeLocation: { type: mongoose.Schema.Types.Mixed, default: null },
+    onboardingCompleted: { type: Boolean, default: false },
+    remindersEnabled: { type: Boolean, default: true },
+    reminderLeadTime: { type: String, default: '1hour' },
     createdAt: { type: Date, default: Date.now },
   },
   { collection: 'users' },
@@ -194,6 +201,76 @@ const auditLogSchema = new mongoose.Schema(
   { collection: 'audit_logs' },
 );
 
+const geoLocationSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, unique: true },
+    type: { type: String, required: true, enum: ['country', 'state', 'district', 'city', 'locality', 'postal_code'] },
+    name: { type: String, required: true },
+    nameLower: { type: String, required: true },
+    altNames: { type: [String], default: [] },
+    parentId: { type: String, default: null },
+    countryId: { type: String, default: 'IN' },
+    stateId: { type: String, default: null },
+    districtId: { type: String, default: null },
+    cityId: { type: String, default: null },
+    code: { type: String, default: '' },
+    pincode: { type: String, default: '' },
+    officeType: { type: String, default: '' },
+    geo: { type: { type: String, enum: ['Point'] }, coordinates: { type: [Number] } },
+    active: { type: Boolean, default: true },
+    editedByAdmin: { type: Boolean, default: false },
+    source: { type: String, default: '' },
+    datasetVersion: { type: String, default: '' },
+    contentHash: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { collection: 'geo_locations', minimize: false },
+);
+geoLocationSchema.index({ type: 1, nameLower: 1 });
+geoLocationSchema.index({ type: 1, stateId: 1, nameLower: 1 });
+geoLocationSchema.index({ type: 1, districtId: 1, nameLower: 1 });
+geoLocationSchema.index({ type: 1, cityId: 1, nameLower: 1 });
+geoLocationSchema.index({ pincode: 1, type: 1 });
+geoLocationSchema.index({ parentId: 1 });
+geoLocationSchema.index({ geo: '2dsphere' }, { sparse: true });
+
+const geoImportSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, unique: true },
+    dataset: { type: String },
+    source: { type: String },
+    datasetVersion: { type: String },
+    status: { type: String, index: true },
+    dryRun: { type: Boolean, default: false },
+    actorId: { type: String },
+    actorEmail: { type: String },
+    startedAt: { type: Date },
+    finishedAt: { type: Date },
+    report: { type: mongoose.Schema.Types.Mixed, default: {} },
+  },
+  { collection: 'geo_imports', minimize: false },
+);
+
+const reviewSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, unique: true },
+    eventId: { type: String, required: true, index: true },
+    userId: { type: String, required: true, index: true },
+    author: { type: String, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    story: { type: String, required: true, maxlength: 500 },
+    tips: { type: String, default: '', maxlength: 140 },
+    verifiedAttendee: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { collection: 'reviews' },
+);
+reviewSchema.index({ eventId: 1, userId: 1 }, { unique: true });
+
+const GeoLocationModel = mongoose.models.GeoLocation || mongoose.model('GeoLocation', geoLocationSchema);
+const GeoImportModel = mongoose.models.GeoImport || mongoose.model('GeoImport', geoImportSchema);
+const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 const EventModel = mongoose.models.Event || mongoose.model('Event', eventSchema);
 const RegistrationModel = mongoose.models.Registration || mongoose.model('Registration', registrationSchema);
 const BookingModel = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);
@@ -226,4 +303,7 @@ module.exports = {
   UserModel,
   ReportModel,
   AuditLogModel,
+  ReviewModel,
+  GeoLocationModel,
+  GeoImportModel,
 };

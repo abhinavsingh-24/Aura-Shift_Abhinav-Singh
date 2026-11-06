@@ -17,7 +17,7 @@ const PATHS = [
   'M615 655 C500 700 330 640 215 610', 'M615 655 C740 700 860 640 975 600',
 ];
 
-function MapTerrain({ counts }) {
+function MapTerrain({ counts, hoveredPoint = null }) {
   const art = useMemo(() => {
     const by = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
     const hillRand = seeded(hash32('hills'));
@@ -95,6 +95,16 @@ function MapTerrain({ counts }) {
           <text className="map-region-count" x={r.cx} y={r.cy - r.ry * 0.9 + 22}>{counts[r.id] ? `${counts[r.id]} quest${counts[r.id] === 1 ? '' : 's'}` : 'no quests here'}</text>
         </g>
       ))}
+
+      {/* Synchronized active/hovered pin beacon aura */}
+      {hoveredPoint && (
+        <g className="map-terrain-beacon" transform={`translate(${hoveredPoint.x} ${hoveredPoint.y})`}>
+          <circle r="48" className="beacon-ring-outer" />
+          <circle r="28" className="beacon-ring-mid" />
+          <circle r="12" className="beacon-ring-inner" />
+          <circle r="4" fill="#FFFCF4" />
+        </g>
+      )}
 
       {/* compass rose */}
       <g transform="translate(72 418) scale(.85)" opacity=".92">

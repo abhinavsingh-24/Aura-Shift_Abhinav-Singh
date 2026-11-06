@@ -15,7 +15,7 @@ const clampNum = (v, a, b) => Math.min(b, Math.max(a, v));
  * stable positions when filters change. Camera = translate + scale on one canvas that holds terrain AND papers,
  * so markers can never drift out of alignment with the terrain.
  */
-export default function WorldMap({ events, allEvents, loading, selectedId, onSelect, savedIds, onToggleSave, onClearFilters, hasActiveFilters }) {
+export default function WorldMap({ events, allEvents, loading, selectedId, hoveredId = null, onSelect, savedIds, onToggleSave, onClearFilters, hasActiveFilters }) {
   const viewportRef = useRef(null);
   const dragRef = useRef(null);
   const movedRef = useRef(false);
@@ -27,9 +27,14 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
   const [activeRegion, setActiveRegion] = useState('all');
 
   const layout = useMemo(() => {
-    const byId = new Map();
-    [...(allEvents || []), ...events].forEach((e) => byId.set(String(e.id), e));
-    return layoutEvents([...byId.values()]);
+    try {
+      const byId = new Map();
+      [...(allEvents || []), ...events].forEach((e) => byId.set(String(e.id), e));
+      return layoutEvents([...byId.values()]);
+    } catch (layoutError) {
+      console.warn('Map layout computation fallback:', layoutError);
+      return {};
+    }
   }, [allEvents, events]);
 
   const regionEvents = useMemo(() => activeRegion === 'all' ? events : events.filter((event) => layout[String(event.id)]?.regionId === activeRegion), [events, layout, activeRegion]);
@@ -41,6 +46,7 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
   }, {}), [regionEvents, layout]);
 
   const selected = useMemo(() => events.find((e) => String(e.id) === String(selectedId)) || null, [events, selectedId]);
+  const hoveredPoint = useMemo(() => (hoveredId ? layout[String(hoveredId)] || null : null), [hoveredId, layout]);
 
   const [minScale, setMinScale] = useState(1);
 
@@ -211,12 +217,25 @@ export default function WorldMap({ events, allEvents, loading, selectedId, onSel
             data-zoom={cam.k.toFixed(3)}
             style={{ width: `${cam.k * 100}%`, aspectRatio: `${MAP_W} / ${MAP_H}`, transform: `translate(${cam.x}px, ${cam.y}px)` }}
           >
-            <MapTerrain counts={counts} />
+            <MapTerrain counts={counts} hoveredPoint={hoveredPoint} />
             <div className="map-fireflies" aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ '--i': i }} />)}</div>
             {regionEvents.map((event) => {
               const point = layout[String(event.id)];
               if (!point) return null;
-              return <QuestPaper key={event.id} event={event} point={point} selected={String(event.id) === String(selectedId)} saved={saved.has(String(event.id))} onSelect={handleSelect} onFocusPaper={onFocusPaper} />;
+              const isSelected = String(event.id) === String(selectedId);
+              const isHovered = String(event.id) === String(hoveredId);
+              return (
+                <QuestPaper
+                  key={event.id}
+                  event={event}
+                  point={point}
+                  selected={isSelected}
+                  hovered={isHovered}
+                  saved={saved.has(String(event.id))}
+                  onSelect={handleSelect}
+                  onFocusPaper={onFocusPaper}
+                />
+              );
             })}
           </div>
 

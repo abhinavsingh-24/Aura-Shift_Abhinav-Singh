@@ -10,8 +10,8 @@
     "db:seed": "node server/scripts/seed.js",
     "db:seed:demo": "node server/scripts/seedDemo.js",
     "db:reset:dev": "node server/scripts/resetDev.js",
-    "test": "node --test server/*.test.js client/src/lib/*.test.js",
-    "test:unit": "node --test server/*.test.js client/src/lib/*.test.js",
+    "test": "node -r ./server/testEnv.js --test server/*.test.js client/src/lib/*.test.js",
+    "test:unit": "node -r ./server/testEnv.js --test server/*.test.js client/src/lib/*.test.js",
     "test:e2e": "playwright test",
     "lint": "npm --prefix client run lint",
     "build": "npm --prefix client run build"

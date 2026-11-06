@@ -3,7 +3,7 @@ import { MAP_W, MAP_H } from '../../lib/mapLayout';
 import { categoryGlyph, formatShortDate } from '../../lib/format';
 
 /** A real event, pinned to the map as a small invitation. Position comes from the layout, never from random per-render values. */
-function QuestPaper({ event, point, selected, saved, onSelect, onFocusPaper }) {
+function QuestPaper({ event, point, selected, hovered = false, saved, onSelect, onFocusPaper }) {
   const ref = useRef(null);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -27,8 +27,8 @@ function QuestPaper({ event, point, selected, saved, onSelect, onFocusPaper }) {
     <button
       ref={ref}
       type="button"
-      className={`quest-paper${selected ? ' is-selected' : ''}${saved ? ' is-saved' : ''}`}
-      style={{ left: `${(point.x / MAP_W) * 100}%`, top: `${(point.y / MAP_H) * 100}%`, '--rot0': `${point.rot}deg`, zIndex: selected ? 50 : Math.round(point.y / 10) }}
+      className={`quest-paper${selected ? ' is-selected' : ''}${hovered ? ' is-hovered' : ''}${saved ? ' is-saved' : ''}`}
+      style={{ left: `${(point.x / MAP_W) * 100}%`, top: `${(point.y / MAP_H) * 100}%`, '--rot0': `${point.rot}deg`, zIndex: selected || hovered ? 80 : Math.round(point.y / 10) }}
       aria-pressed={selected}
       aria-label={label}
       data-quest-id={event.id}
@@ -37,6 +37,7 @@ function QuestPaper({ event, point, selected, saved, onSelect, onFocusPaper }) {
       onPointerMove={handleMove}
       onPointerLeave={resetTilt}
     >
+      {(selected || hovered) && <span className="paper-aura-ring" aria-hidden="true" />}
       <span className="paper-seal" aria-hidden="true" />
       <span className="paper-thumb" aria-hidden="true">
         {event.imageUrl && !imageFailed

@@ -1,8 +1,9 @@
 import BrandLogo from './BrandLogo';
+import './footer.css';
 
 export default function Footer({ onCityClick, onCategoryClick }) {
   return (
-    <footer className="sq-footer">
+    <footer className="sq-footer" id="about">
       <div className="footer-top-grid">
         <div className="footer-brand-col">
           <BrandLogo variant="compact" />

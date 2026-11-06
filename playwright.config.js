@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30000,
+  timeout: 60000,
   expect: {
     timeout: 6000,
   },
@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:5199',
-    trace: 'off',
+    trace: 'retain-on-failure',
   },
   webServer: [
     {

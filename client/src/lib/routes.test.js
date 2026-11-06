@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ROUTES, GROUPS, resolveRoute, navFor, normalizePath, isClientNavigable, safeNextPath, documentTitle, siblingsOf } from './routes.js';
+import { ROUTES, GROUPS, resolveRoute, navFor, isClientNavigable, safeNextPath, documentTitle, siblingsOf } from './routes.js';
 
 test('route ids and paths are unique and every route belongs to a known group', () => {
   assert.equal(new Set(ROUTES.map((r) => r.id)).size, ROUTES.length);

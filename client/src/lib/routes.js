@@ -31,9 +31,14 @@ export const ROUTES = [
 
   { id: 'publish', path: '/publish', label: 'Publish a Quest', title: 'Create a new quest', group: 'organize', nav: 'primary-action', blurb: 'Share a real experience with your city. Organizer accounts publish; everyone can see how.' },
   { id: 'organizer', path: '/organizer', label: 'Organizer Hub', title: 'Organizer dashboard', group: 'organize', nav: 'account', blurb: 'Your published quests and their registrations.', role: 'organizer' },
+  { id: 'admin', path: '/admin', label: 'Admin Portal', title: 'Platform administration', group: 'organize', nav: 'account', blurb: 'Platform moderation, event imports and audit activity.', role: 'admin' },
 
   { id: 'safety', path: '/safety', label: 'Safety & Reports', title: 'Trust, safety & reports', group: 'trust', nav: 'footer', blurb: 'Report listings that look unsafe or misleading.' },
   { id: 'insights', path: '/insights', label: 'Community Notes', title: 'Community field notes', group: 'trust', nav: 'footer', blurb: 'Aggregate activity across SIDEQUEST. No personal data.' },
+  { id: 'privacy', path: '/privacy', label: 'Privacy Policy', title: 'Privacy & Security Policy', group: 'trust', nav: 'footer', blurb: 'How SIDEQUEST protects your data and privacy.' },
+  { id: 'terms', path: '/terms', label: 'Terms of Service', title: 'Terms of Service', group: 'trust', nav: 'footer', blurb: 'Platform rules, ticketing policies and terms of use.' },
+  { id: 'help', path: '/help', label: 'Help & Contact', title: 'Help & Support', group: 'trust', nav: 'footer', blurb: 'Frequently asked questions, organizer guidance and support.' },
+  { id: 'about', path: '/about', label: 'About Us', title: 'About SIDEQUEST India', group: 'trust', nav: 'footer', blurb: 'Our mission and vision for hyperlocal discovery across India.' },
 ];
 
 const DETAIL = { id: 'quest-detail', label: 'Quest', title: 'Quest details', group: 'explore', nav: '', blurb: 'Everything you need to decide and join.' };
@@ -61,7 +66,7 @@ export function navFor(slot, user) {
   return ROUTES.filter((route) => route.nav === slot && (!route.role || (user && user.role === route.role)) && (!route.auth || user));
 }
 
-export function documentTitle(route, params = {}) {
+export function documentTitle(route, _params = {}) {
   if (route.id === 'home') return 'SIDEQUEST — Your City. Your Next Quest.';
   if (route.id === 'quest-detail') return `Quest details · SIDEQUEST`;
   return `${route.id === 'not-found' ? 'Page not found' : route.label} · SIDEQUEST`;
