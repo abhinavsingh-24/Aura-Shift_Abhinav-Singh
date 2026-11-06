@@ -29,7 +29,7 @@ import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
 import AuthGate from './components/AuthGate';
 import ExplorerOnboardingModal from './components/ExplorerOnboardingModal';
-import { addEventToChain, createQuestChain, estimateChainSummary, moveChainStop, removeChainStop } from './lib/questChains';
+import { addEventToChain, createQuestChain, estimateChainSummary, findNearbyChainQuests, moveChainStop, optimizeChainRoute, removeChainStop } from './lib/questChains';
 import { rankRadarQuests } from './lib/questRadar';
 import { getMysteryQuest } from './lib/mysteryQuest';
 import { getAchievements } from './lib/achievements';
@@ -236,6 +236,7 @@ function AuthPage({ mode }) {
 function MainApp() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname.replace(/\/$/, '') || '/');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [navOpenMenu, setNavOpenMenu] = useState('');
 
   useEffect(() => {
     const handlePopState = () => {
@@ -245,6 +246,28 @@ function MainApp() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  useEffect(() => {
+    const closeNavigation = (event) => {
+      if (!event.target.closest('.topbar .nav-dropdown') && !event.target.closest('.profile-menu-container')) {
+        setNavOpenMenu('');
+        setProfileDropdownOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setNavOpenMenu('');
+        setProfileDropdownOpen(false);
+        setMobileNavOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', closeNavigation);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeNavigation);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
   const navigateTo = (path) => {
     const target = path.replace(/\/$/, '') || '/';
     if (window.location.pathname.replace(/\/$/, '') !== target) {
@@ -252,6 +275,8 @@ function MainApp() {
     }
     setCurrentPath(target);
     setMobileNavOpen(false);
+    setNavOpenMenu('');
+    setProfileDropdownOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -358,8 +383,8 @@ function MainApp() {
     }
   });
 
-  const [selectedCity, setSelectedCity] = useState('Bengaluru');
-  const [selectedLocality, setSelectedLocality] = useState('Koramangala');
+  const [selectedCity, setSelectedCity] = useState('Nallasopara');
+  const [selectedLocality, setSelectedLocality] = useState('');
   const [radarFilters, setRadarFilters] = useState({ timeframe: 'next7days', category: 'all', city: 'all', locality: 'all', radiusKm: '25', sort: 'match' });
   const [mysteryPick, setMysteryPick] = useState(null);
   const [mysteryFilters, setMysteryFilters] = useState({ city: 'all', category: 'all', time: 'any' });
@@ -432,12 +457,17 @@ function MainApp() {
   const [activeChainId, setActiveChainId] = useState(() => {
     try { return window.localStorage.getItem('sidequest-active-chain') || ''; } catch { return ''; }
   });
+  const [chainSearch, setChainSearch] = useState('');
+  const [chainRadiusKm, setChainRadiusKm] = useState('25');
+  const [chainSelection, setChainSelection] = useState([]);
 
   const achievementStats = useMemo(() => ({ savedCount: savedQuestIds.length, chainCount: questChains.length, chainStops: questChains.reduce((total, chain) => total + chain.stops.length, 0), mysteryRevealCount }), [savedQuestIds, questChains, mysteryRevealCount]);
   const achievements = useMemo(() => getAchievements(achievementStats), [achievementStats]);
   const [newChainTitle, setNewChainTitle] = useState('');
   const [toast, setToast] = useState('');
   const smartRecommendations = useMemo(() => rankSmartRecommendations(recommendations.length ? recommendations : allEvents, { interests: selectedInterests, savedIds: savedQuestIds, city: selectedCity, locality: selectedLocality, userCoordinates, now: currentTime }), [recommendations, allEvents, selectedInterests, savedQuestIds, selectedCity, selectedLocality, userCoordinates, currentTime]);
+  const activeQuestChain = questChains.find((chain) => chain.id === activeChainId) || questChains[0] || null;
+  const chainQuestOptions = useMemo(() => findNearbyChainQuests(allEvents, { userCoordinates, city: selectedCity, locality: selectedLocality, radiusKm: chainRadiusKm, search: chainSearch, excludedIds: activeQuestChain?.stops?.map((stop) => stop.eventId) || [], now: currentTime }), [allEvents, userCoordinates, selectedCity, selectedLocality, chainRadiusKm, chainSearch, activeQuestChain, currentTime]);
   const explorerLevel = useMemo(() => getExplorerLevel({ saved: savedQuestIds.length, reviews: Object.values(reviewsByQuest).reduce((n, list) => n + (list || []).length, 0), chainStops: questChains.reduce((n, chain) => n + chain.stops.length, 0), reveals: mysteryRevealCount, chatMessages: chatMessages.length }), [savedQuestIds, reviewsByQuest, questChains, mysteryRevealCount, chatMessages]);
   const [viewMode, setViewMode] = useState(page === 'quests' ? 'list' : 'map');
   const [mapSelectedId, setMapSelectedId] = useState(null);
@@ -1000,20 +1030,26 @@ function MainApp() {
         <nav id="primary-nav" className={`nav ${mobileNavOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           {!currentUser ? (
             <>
-              <div className="nav-group nav-group-discover">
-                <a href="/quests" aria-current={page === 'quests' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/quests')}>Explore Events</a>
-                <a href="/radar" aria-current={page === 'radar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/radar')}>Quest Radar</a>
-                <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleSectionScroll('how-it-works'); }}>How It Works</a>
-                <a href="#explorers" onClick={(e) => { e.preventDefault(); handleSectionScroll('explorers'); }}>For Explorers</a>
-                <a href="#organizers" onClick={(e) => { e.preventDefault(); handleSectionScroll('organizers'); }}>For Organizers</a>
-                <a href="#about" onClick={(e) => { e.preventDefault(); handleSectionScroll('about'); }}>About</a>
-              </div>
-
+              <details className="nav-dropdown nav-group-discover" open={navOpenMenu === 'explore'}>
+                <summary onClick={(event) => { event.preventDefault(); setProfileDropdownOpen(false); setNavOpenMenu((open) => open === 'explore' ? '' : 'explore'); }} className={ ['quests', 'radar', 'recommended', 'nearby'].includes(page) ? 'is-active' : '' }>Explore <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="/quests" aria-current={page === 'quests' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/quests')}>Explore Events</a>
+                  <a href="/radar" aria-current={page === 'radar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/radar')}>Quest Radar</a>
+                  <a href="/recommended" aria-current={page === 'recommended' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/recommended')}>For You</a>
+                </div>
+              </details>
+              <details className="nav-dropdown" open={navOpenMenu === 'discover'}>
+                <summary onClick={(event) => { event.preventDefault(); setNavOpenMenu((open) => open === 'discover' ? '' : 'discover'); }}>Discover SIDEQUEST <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleSectionScroll('how-it-works'); }}>How It Works</a>
+                  <a href="#explorers" onClick={(e) => { e.preventDefault(); handleSectionScroll('explorers'); }}>For Explorers</a>
+                  <a href="#organizers" onClick={(e) => { e.preventDefault(); handleSectionScroll('organizers'); }}>For Organizers</a>
+                  <a href="#about" onClick={(e) => { e.preventDefault(); handleSectionScroll('about'); }}>About</a>
+                </div>
+              </details>
               <div className="nav-group nav-group-auth">
-                <span
-                  className={`system-status ${backendHealth?.database === 'mongodb' ? 'is-connected' : 'is-demo'}`}
-                  title={backendHealth?.database === 'mongodb' ? 'Verified connection to MongoDB Atlas database' : 'Demo memory database'}
-                >
+                <span className={`system-status ${backendHealth?.database === 'mongodb' ? 'is-connected' : 'is-demo'}`}
+                  title={backendHealth?.database === 'mongodb' ? 'Verified connection to MongoDB Atlas database' : 'Demo memory database'}>
                   {backendHealth?.database === 'mongodb' ? '● MongoDB' : '● Demo State'}
                 </span>
                 <a href="/login" className="nav-signin">Sign in</a>
@@ -1022,44 +1058,51 @@ function MainApp() {
             </>
           ) : (
             <>
-              <div className="nav-group nav-group-discover">
-                <a href="/quests" aria-current={page === 'quests' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/quests')}>Explore Events</a>
-                <a href="/radar" aria-current={page === 'radar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/radar')}>Quest Radar</a>
-                <a href="/recommended" aria-current={page === 'recommended' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/recommended')}>For You</a>
-              </div>
-
-              <div className="nav-group nav-group-activity">
-                <a href="/saved" aria-current={page === 'saved' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/saved')}>
-                  Saved {savedQuestIds.length > 0 && <span className="nav-counter-badge">{savedQuestIds.length}</span>}
-                </a>
-                <a href="/chains" aria-current={page === 'chains' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/chains')}>Quest Chains</a>
-                <a href="/bookings" aria-current={page === 'bookings' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/bookings')}>My Bookings</a>
-              </div>
-
-              <div className="nav-group nav-group-tools">
-                <a href="/publish" aria-current={page === 'publish' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/publish')}>Publish</a>
-                <a href="/organizer" aria-current={page === 'organizer' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/organizer')}>Organizer Hub</a>
-                {currentUser?.role === 'admin' && (
-                  <a href="/admin" aria-current={page === 'admin' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/admin')}>Admin</a>
-                )}
-                <a href="/safety" aria-current={page === 'safety' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/safety')}>Safety</a>
-                <a href="/assistant" aria-current={page === 'assistant' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/assistant')}>Adventure AI</a>
-              </div>
-
+              <details className="nav-dropdown nav-group-discover" open={navOpenMenu === 'explore'}>
+                <summary onClick={(event) => { event.preventDefault(); setProfileDropdownOpen(false); setNavOpenMenu((open) => open === 'explore' ? '' : 'explore'); }} className={ ['quests', 'radar', 'recommended', 'nearby'].includes(page) ? 'is-active' : '' }>Explore <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="/quests" aria-current={page === 'quests' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/quests')}>Explore Events</a>
+                  <a href="/radar" aria-current={page === 'radar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/radar')}>Quest Radar</a>
+                  <a href="/recommended" aria-current={page === 'recommended' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/recommended')}>For You</a>
+                </div>
+              </details>
+              <details className="nav-dropdown" open={navOpenMenu === 'activity'}>
+                <summary onClick={(event) => { event.preventDefault(); setProfileDropdownOpen(false); setNavOpenMenu((open) => open === 'activity' ? '' : 'activity'); }} className={ ['saved', 'chains', 'bookings', 'calendar', 'reminders'].includes(page) ? 'is-active' : '' }>My Activity <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="/saved" aria-current={page === 'saved' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/saved')}>Saved {savedQuestIds.length > 0 && <span className="nav-counter-badge">{savedQuestIds.length}</span>}</a>
+                  <a href="/chains" aria-current={page === 'chains' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/chains')}>Quest Chains</a>
+                  <a href="/bookings" aria-current={page === 'bookings' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/bookings')}>My Bookings</a>
+                  <a href="/calendar" aria-current={page === 'calendar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/calendar')}>Calendar</a>
+                  <a href="/reminders" aria-current={page === 'reminders' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/reminders')}>Reminders</a>
+                </div>
+              </details>
+              <details className="nav-dropdown" open={navOpenMenu === 'organizer'}>
+                <summary onClick={(event) => { event.preventDefault(); setProfileDropdownOpen(false); setNavOpenMenu((open) => open === 'organizer' ? '' : 'organizer'); }} className={ ['publish', 'organizer', 'insights', 'admin'].includes(page) ? 'is-active' : '' }>Organizer <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="/publish" aria-current={page === 'publish' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/publish')}>Publish an Event</a>
+                  <a href="/organizer" aria-current={page === 'organizer' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/organizer')}>Organizer Hub</a>
+                  <a href="/insights" aria-current={page === 'insights' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/insights')}>Insights</a>
+                  {currentUser?.role === 'admin' && <a href="/admin" aria-current={page === 'admin' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/admin')}>Admin Console</a>}
+                </div>
+              </details>
+              <details className="nav-dropdown" open={navOpenMenu === 'more'}>
+                <summary onClick={(event) => { event.preventDefault(); setProfileDropdownOpen(false); setNavOpenMenu((open) => open === 'more' ? '' : 'more'); }} className={ ['safety', 'assistant', 'help', 'privacy', 'terms', 'about'].includes(page) ? 'is-active' : '' }>More <span aria-hidden="true">▾</span></summary>
+                <div className="nav-dropdown-menu">
+                  <a href="/safety" aria-current={page === 'safety' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/safety')}>Safety Centre</a>
+                  <a href="/assistant" aria-current={page === 'assistant' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/assistant')}>Adventure AI</a>
+                  <a href="/help" aria-current={page === 'help' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/help')}>Help Centre</a>
+                </div>
+              </details>
               <div className="nav-group nav-group-auth">
-                <span
-                  className={`system-status ${backendHealth?.database === 'mongodb' ? 'is-connected' : 'is-demo'}`}
-                  title={backendHealth?.database === 'mongodb' ? 'Verified connection to MongoDB Atlas database' : 'Demo memory database'}
-                >
+                <span className={`system-status ${backendHealth?.database === 'mongodb' ? 'is-connected' : 'is-demo'}`}
+                  title={backendHealth?.database === 'mongodb' ? 'Verified connection to MongoDB Atlas database' : 'Demo memory database'}>
                   {backendHealth?.database === 'mongodb' ? '● MongoDB' : '● Demo State'}
                 </span>
-
-                {/* Profile Badge & Dropdown Menu */}
                 <div className="profile-menu-container">
                   <button
                     type="button"
                     className="profile-badge-btn"
-                    onClick={() => setProfileDropdownOpen((v) => !v)}
+                    onClick={() => { setNavOpenMenu(''); setProfileDropdownOpen((v) => !v); }}
                     aria-expanded={profileDropdownOpen}
                     aria-haspopup="true"
                     aria-label="Explorer profile and progression menu"
@@ -1067,8 +1110,7 @@ function MainApp() {
                     <span className="profile-avatar-circle">
                       {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'E'}
                     </span>
-                    <span className="nav-user">Hi, {currentUser.name.split(' ')[0]}</span>
-                    <span className="profile-level-badge">{explorerLevel.title} · Lv. {explorerLevel.level}</span>
+                    <span className="nav-user">{currentUser.name.split(' ')[0]}</span>
                     <span className="profile-dropdown-arrow" aria-hidden="true">{profileDropdownOpen ? '▲' : '▼'}</span>
                   </button>
 
@@ -1161,16 +1203,6 @@ function MainApp() {
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  className="nav-auth-btn"
-                  onClick={async () => {
-                    await logoutAccount().catch(() => {});
-                    window.location.assign('/');
-                  }}
-                >
-                  Sign out
-                </button>
               </div>
             </>
           )}
@@ -1213,6 +1245,13 @@ function MainApp() {
               })[page] || 'Explore SIDEQUEST'}
             </h1>
             <p className="description">Discover and experience real events happening across India.</p>
+            {['quests', 'radar', 'recommended'].includes(page) && (
+              <nav className="explore-subnav" aria-label="Explore sections">
+                <a href="/quests" className={page === 'quests' ? 'is-active' : ''} aria-current={page === 'quests' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/quests')}>🧭 Discover Quests</a>
+                <a href="/radar" className={page === 'radar' ? 'is-active' : ''} aria-current={page === 'radar' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/radar')}>📡 Quest Radar</a>
+                <a href="/recommended" className={page === 'recommended' ? 'is-active' : ''} aria-current={page === 'recommended' ? 'page' : undefined} onClick={(e) => handleNavLink(e, '/recommended')}>✨ For You</a>
+              </nav>
+            )}
           </div>
         ) : null}
 
@@ -1672,7 +1711,7 @@ function MainApp() {
                         />
                       ) : null}
                       <span className="visual-symbol" aria-hidden="true">{categorySymbol(event.category)}</span>
-                      <span className="visual-caption">VERIFIED LISTING</span>
+                      <span className="visual-caption">{event.isSampleData ? 'DEMO QUEST' : 'VERIFIED LISTING'}</span>
                       <span className="visual-stamp">{event.category}</span>
                       <span className={`card-price-pill ${event.isFree || event.priceStarting === 0 ? 'is-free' : ''}`}>
                         {event.isFree || event.priceStarting === 0 ? 'FREE' : `FROM ₹${(event.priceStarting || 0).toLocaleString('en-IN')}`}
@@ -1684,7 +1723,7 @@ function MainApp() {
                       {event.source?.verifiedDate ? (
                         <span className="verified-source-tag">✓ Verified Source</span>
                       ) : event.isSampleData ? (
-                        <span className="pill muted">Development data</span>
+                        <span className="pill muted">Demo content</span>
                       ) : null}
                     </div>
 
@@ -2400,119 +2439,95 @@ function MainApp() {
         {/* ==================== QUEST CHAINS ==================== */}
         {page === 'chains' && (
           !currentUser && !authLoading ? (
-            <AuthGate
-              title="Build your adventure chains"
-              description="Sign in to create, organize, and share multi-stop quest chains for weekend trips and city tours."
-              next="/chains"
-              requiredRole="explorer"
-            />
+            <AuthGate title="Build your adventure chains" description="Sign in to create, organize, and share multi-stop quest chains for weekend trips and city tours." next="/chains" requiredRole="explorer" />
           ) : (
-            <section className="panel">
+            <section className="panel chains-panel">
               <div className="section-heading">
                 <div>
                   <span className="eyebrow">Feature 08 / Quest Chains</span>
-                  <h2>Build a mini-adventure itinerary</h2>
-                  <p className="description">Chain multiple stops together into an outing.</p>
+                  <h2>Build a nearby mini-adventure</h2>
+                  <p className="description">Create an itinerary from real quests around your location. Select several stops, then arrange them in the order you want to visit.</p>
                 </div>
               </div>
 
-              <form
-                className="chain-create-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!newChainTitle.trim()) return;
-                  const newChain = createQuestChain(newChainTitle.trim());
-                  setQuestChains([...questChains, newChain]);
-                  setActiveChainId(newChain.id);
-                  setNewChainTitle('');
-                }}
-              >
-                <input
-                  aria-label="Quest Chain name"
-                  type="text"
-                  placeholder="Name your Quest Chain (e.g. Saturday in Bengaluru)"
-                  value={newChainTitle}
-                  onChange={(e) => setNewChainTitle(e.target.value)}
-                />
+              <form className="chain-create-form" onSubmit={(e) => {
+                e.preventDefault();
+                const newChain = createQuestChain(newChainTitle);
+                if (!newChain) { setToast('Give your Quest Chain a name between 2 and 60 characters.'); return; }
+                setQuestChains((current) => [...current, newChain]);
+                setActiveChainId(newChain.id);
+                setChainSelection([]);
+                setNewChainTitle('');
+              }}>
+                <input aria-label="Quest Chain name" type="text" maxLength={60} placeholder="Name your Quest Chain (e.g. Saturday around town)" value={newChainTitle} onChange={(e) => setNewChainTitle(e.target.value)} />
                 <button type="submit" className="primary-btn">Create Quest Chain</button>
               </form>
 
+              {questChains.length > 0 && (
+                <div className="chain-builder-card" style={{ marginTop: 18 }}>
+                  <div className="section-heading" style={{ marginBottom: 12 }}>
+                    <div><span className="eyebrow">Step 1 / Choose your itinerary</span><h3 style={{ margin: '4px 0' }}>Select a chain to build</h3></div>
+                    <label className="chain-select-label">Active chain
+                      <select aria-label="Active Quest Chain" value={activeQuestChain?.id || ''} onChange={(e) => { setActiveChainId(e.target.value); setChainSelection([]); }}>
+                        {questChains.map((chain) => <option key={chain.id} value={chain.id}>{chain.title}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="chain-nearby-toolbar">
+                    <div><span className="eyebrow">Step 2 / Find nearby quests</span><h3>Quests near you</h3><p className="small-copy">{userCoordinates ? 'Sorted by distance from your current location.' : `Showing quests in ${selectedLocality && selectedLocality !== 'all' ? `${selectedLocality}, ` : ''}${selectedCity || 'your selected city'}. Enable location for distance-based results.`}</p></div>
+                    <div className="chain-nearby-controls">
+                      <input type="search" aria-label="Search nearby quests" placeholder="Search title, venue, category…" value={chainSearch} onChange={(e) => setChainSearch(e.target.value)} />
+                      <select aria-label="Nearby quest radius" value={chainRadiusKm} onChange={(e) => setChainRadiusKm(e.target.value)} disabled={!userCoordinates}><option value="5">Within 5 km</option><option value="10">Within 10 km</option><option value="25">Within 25 km</option><option value="50">Within 50 km</option><option value="any">Any distance</option></select>
+                      <button type="button" className="secondary-btn btn-sm" onClick={requestUserLocation} disabled={locating}>{locating ? 'Finding…' : userCoordinates ? 'Refresh location' : 'Use my location'}</button>
+                    </div>
+                  </div>
+                  {locationStatus && <p className="helper-text" role="status">{locationStatus}</p>}
+                  <div className="chain-quest-picker" aria-label="Nearby quests to add to chain">
+                    {chainQuestOptions.length === 0 ? (
+                      <div className="chain-empty"><strong>No matching nearby quests found.</strong><p>Try a larger radius, clear your search, choose another city/locality, or refresh your location.</p></div>
+                    ) : chainQuestOptions.map((quest) => {
+                      const checked = chainSelection.includes(String(quest.id));
+                      return (
+                        <label key={quest.id} className={`chain-quest-option ${checked ? 'selected' : ''}`}>
+                          <input type="checkbox" checked={checked} onChange={(e) => setChainSelection((current) => e.target.checked ? [...current, String(quest.id)] : current.filter((id) => id !== String(quest.id)))} />
+                          <span className="chain-quest-option-main"><strong>{quest.title || 'Untitled quest'}</strong><span>{[quest.category, quest.venue, quest.locality, quest.city].filter(Boolean).join(' · ')}</span><small>{quest.date ? formatEventDateTime(quest) : 'Date to be announced'}{quest.distanceKm !== null ? ` · ${quest.distanceKm.toFixed(1)} km away` : ''}</small></span>
+                          <span className="chain-quest-add-label">{checked ? 'Selected' : 'Select'}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="chain-picker-footer"><span>{chainSelection.length} quest{chainSelection.length === 1 ? '' : 's'} selected</span><button type="button" className="primary-btn" disabled={!chainSelection.length || !activeQuestChain} onClick={() => {
+                    const selected = chainQuestOptions.filter((quest) => chainSelection.includes(String(quest.id)));
+                    if (!selected.length) return;
+                    setQuestChains((current) => current.map((chain) => chain.id === activeQuestChain.id ? { ...selected.reduce((updated, quest) => addEventToChain(updated, quest), chain), routeOptimized: false, routeDistanceKm: null } : chain));
+                    setChainSelection([]);
+                    setToast(`Added ${selected.length} quest${selected.length === 1 ? '' : 's'} to ${activeQuestChain.title}.`);
+                  }}>Add selected quests to chain</button></div>
+                </div>
+              )}
+
               <div className="chains-list" style={{ marginTop: '1.5rem' }}>
                 {questChains.map((chain) => (
-                  <div key={chain.id} className={`chain-card ${chain.id === activeChainId ? 'active' : ''}`} onClick={() => setActiveChainId(chain.id)}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h3>{chain.title}</h3>
-                      <button
-                        type="button"
-                        className="ghost-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setQuestChains((curr) => curr.filter((c) => c.id !== chain.id));
-                          if (activeChainId === chain.id) setActiveChainId('');
-                        }}
-                        style={{ fontSize: '0.8rem', color: '#dc2626' }}
-                      >
-                        Delete Chain
-                      </button>
-                    </div>
-                    {chain.stops.length === 0 ? (
-                      <p className="helper-text" style={{ margin: '0.5rem 0' }}>No stops added yet. Explore quests and click "+ Add to chain".</p>
-                    ) : (
-                      <ol className="chain-stops">
-                        {chain.stops.map((stop, index) => (
-                          <li key={`${chain.id}-${stop.eventId}`} className="chain-stop" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
-                            <span>{index + 1}. {stop.title} ({stop.city})</span>
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                              <button
-                                type="button"
-                                className="chain-move-btn secondary-btn btn-sm"
-                                disabled={index === 0}
-                                aria-label={`Move ${stop.title} up`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setQuestChains((curr) => curr.map((c) => c.id === chain.id ? { ...c, stops: moveChainStop(c.stops, index, -1) } : c));
-                                }}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                className="chain-move-btn secondary-btn btn-sm"
-                                disabled={index === chain.stops.length - 1}
-                                aria-label={`Move ${stop.title} down`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setQuestChains((curr) => curr.map((c) => c.id === chain.id ? { ...c, stops: moveChainStop(c.stops, index, 1) } : c));
-                                }}
-                              >
-                                ↓
-                              </button>
-                              <button
-                                type="button"
-                                className="chain-remove-btn ghost-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setQuestChains((curr) => curr.map((c) => c.id === chain.id ? { ...c, stops: removeChainStop(c.stops, stop.eventId) } : c));
-                                }}
-                                style={{ color: '#dc2626', fontSize: '0.8rem' }}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ol>
+                  <div key={chain.id} className={`chain-card ${chain.id === activeQuestChain?.id ? 'active' : ''}`}>
+                    <div className="chain-card-head"><div><span className="chain-index">YOUR ITINERARY</span><h3>{chain.title}</h3><p className="small-copy">{chain.stops.length} planned stop{chain.stops.length === 1 ? '' : 's'}</p></div><div className="chain-card-actions">{chain.id !== activeQuestChain?.id && <button type="button" className="secondary-btn btn-sm" onClick={() => { setActiveChainId(chain.id); setChainSelection([]); }}>Build this chain</button>}<button type="button" className="ghost-btn" onClick={() => { setQuestChains((current) => current.filter((item) => item.id !== chain.id)); if (activeChainId === chain.id) setActiveChainId(''); }} style={{ fontSize: '0.8rem', color: '#b44336' }}>Delete</button></div></div>
+                    {chain.stops.length >= 2 && (
+                      <div className="chain-route-planner">
+                        <div className="chain-route-copy"><strong>Route planner</strong><span>Use a nearest-neighbour route suggestion to reduce backtracking. Distances are straight-line estimates; actual road routes may differ.</span></div>
+                        <button type="button" className="secondary-btn btn-sm" onClick={() => {
+                          const route = optimizeChainRoute(chain.stops, userCoordinates);
+                          if (!route.optimized) { setToast('Add at least two quests with map coordinates to optimize this route.'); return; }
+                          setQuestChains((current) => current.map((item) => item.id === chain.id ? { ...item, stops: route.stops, routeDistanceKm: route.totalDistanceKm, routeOptimized: true } : item));
+                          setToast(`${route.improved ? 'Route order improved' : 'Your current order is already as short as this route heuristic found'}. Approx. straight-line distance: ${route.totalDistanceKm.toFixed(2)} km${route.missingCoordinates ? `; ${route.missingCoordinates} stop(s) without coordinates kept at the end` : ''}.`);
+                        }}>✦ Optimize visiting order</button>
+                        {chain.routeOptimized && <span className="chain-route-distance">Optimized route · approx. {Number(chain.routeDistanceKm || 0).toFixed(2)} km</span>}
+                      </div>
                     )}
-                    {(() => {
-                      const summary = estimateChainSummary(chain);
-                      return (
-                        <div className="chain-summary-badge" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                          {summary.stopCount} {summary.stopCount === 1 ? 'stop' : 'stops'}
-                          {summary.cities?.length ? ` · ${summary.cities.join(' → ')}` : ''}
-                          {summary.multiCity ? ' (Multi-city)' : ''}
-                        </div>
-                      );
-                    })()}
+                    {chain.stops.length === 0 ? <div className="chain-stops-empty">No quests added yet. Select nearby quests above to start building this itinerary.</div> : (
+                      <ol className="chain-stops">{chain.stops.map((stop, index) => (
+                        <li key={`${chain.id}-${stop.eventId}`} className="chain-stop"><span className="chain-stop-number">{index + 1}</span><span className="chain-stop-details"><strong>{stop.title}</strong><span>{[stop.category, stop.venue, stop.locality, stop.city].filter(Boolean).join(' · ')}</span><span>{stop.date ? formatDate(stop.date) : 'Date TBD'}{stop.startTime ? ` · ${stop.startTime}` : ''}</span></span><span className="chain-stop-actions"><button type="button" className="chain-move-btn" disabled={index === 0} aria-label={`Move ${stop.title} up`} onClick={() => setQuestChains((current) => current.map((item) => item.id === chain.id ? { ...item, stops: moveChainStop(item.stops, index, -1), routeOptimized: false, routeDistanceKm: null } : item))}>↑</button><button type="button" className="chain-move-btn" disabled={index === chain.stops.length - 1} aria-label={`Move ${stop.title} down`} onClick={() => setQuestChains((current) => current.map((item) => item.id === chain.id ? { ...item, stops: moveChainStop(item.stops, index, 1), routeOptimized: false, routeDistanceKm: null } : item))}>↓</button><button type="button" className="chain-remove-btn" onClick={() => setQuestChains((current) => current.map((item) => item.id === chain.id ? { ...item, stops: removeChainStop(item.stops, stop.eventId), routeOptimized: false, routeDistanceKm: null } : item))}>Remove</button></span></li>
+                      ))}</ol>
+                    )}
+                    {(() => { const summary = estimateChainSummary(chain); return <div className="chain-footer"><span className="chain-summary-badge">{summary.stopCount} stops{summary.cities.length ? ` · ${summary.cities.join(' → ')}` : ''}{summary.multiCity ? ' · Multi-city' : ''}</span><button type="button" className="secondary-btn btn-sm" onClick={() => { setActiveChainId(chain.id); setChainSelection([]); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Add more quests ↑</button></div>; })()}
                   </div>
                 ))}
               </div>
@@ -3706,6 +3721,7 @@ function MainApp() {
         currentPage={page}
         currentUser={currentUser}
         savedCount={savedQuestIds.length}
+        onNavigate={navigateTo}
       />
 
       {/* EVENT DETAILS MODAL */}

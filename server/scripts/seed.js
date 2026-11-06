@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { EventModel } = require('../db');
 const { verifiedIndiaEvents } = require('../indiaEvents');
+const { nallasoparaDemoQuests } = require('../localDemoEvents');
+const allSeedEvents = [...verifiedIndiaEvents, ...nallasoparaDemoQuests];
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
@@ -14,12 +16,12 @@ async function seedEvents() {
   }
 
   await mongoose.connect(uri);
-  console.log('[Seed] Connected to MongoDB. Seeding India events idempotently...');
+  console.log('[Seed] Connected to MongoDB. Seeding India events and Nallasopara demo quests idempotently...');
 
   let createdCount = 0;
   let updatedCount = 0;
 
-  for (const event of verifiedIndiaEvents) {
+  for (const event of allSeedEvents) {
     const existing = await EventModel.findOne({
       $or: [{ id: event.id }, { title: event.title }],
     });
@@ -28,12 +30,12 @@ async function seedEvents() {
       await EventModel.updateOne({ _id: existing._id }, { $set: event });
       updatedCount += 1;
     } else {
-      await EventModel.create({ ...event, isSampleData: false });
+      await EventModel.create({ ...event, isSampleData: Boolean(event.isSampleData) });
       createdCount += 1;
     }
   }
 
-  console.log(`[Seed] India Events seeded successfully. Created: ${createdCount}, Updated/Verified: ${updatedCount}. Total: ${verifiedIndiaEvents.length}`);
+  console.log(`[Seed] Event seed completed successfully. Created: ${createdCount}, Updated/Verified: ${updatedCount}. Total: ${allSeedEvents.length}`);
   await mongoose.disconnect();
 }
 

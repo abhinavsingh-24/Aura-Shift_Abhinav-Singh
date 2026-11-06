@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { verifiedIndiaEvents } = require('./indiaEvents');
+const { nallasoparaDemoQuests } = require('./localDemoEvents');
+const seedEvents = [...verifiedIndiaEvents, ...nallasoparaDemoQuests];
 const { rankEvents } = require('./recommendations');
 const { validateReportDraft } = require('./reportRules');
 const { createRateLimiter } = require('./rateLimit');
@@ -129,7 +131,7 @@ let mongoReady = false;
 
 // Preload events memory store with verified India events for immediate availability
 let events = [
-  ...verifiedIndiaEvents.map((event) => ({
+  ...seedEvents.map((event) => ({
     ...event,
     _id: event.id,
     status: event.status || 'published',
@@ -144,7 +146,7 @@ async function startDatabase() {
   if (mongoReady) {
     let persisted = await EventModel.find({}).lean();
     const have = new Set(persisted.map((event) => event.id));
-    const missing = verifiedIndiaEvents.filter((event) => !have.has(event.id));
+    const missing = seedEvents.filter((event) => !have.has(event.id));
     if (missing.length) {
       try {
         await EventModel.insertMany(
