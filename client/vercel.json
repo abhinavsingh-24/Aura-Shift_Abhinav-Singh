@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://sidequest-backend-nxs9.onrender.com/api/$1"
+    }
+  ]
+}
